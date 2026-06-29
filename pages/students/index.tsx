@@ -6,6 +6,7 @@ import { useStudents } from "@/lib/hooks/useStudents";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
+import { StudentStatus } from "@/lib/types";
 import { buildRosterWorkbook } from "@/lib/excel/exportRoster";
 
 export default function StudentsPage() {
@@ -16,10 +17,12 @@ export default function StudentsPage() {
   useDefaultYear(activeYears, yearId, setYearId);
   const classes = useClasses(yearId ?? undefined);
   const [classId, setClassId] = useState<string | null>(null);
-  const { query } = useStudents({ academicYearId: yearId ?? undefined, classId: classId ?? undefined });
+  const [statusFilter, setStatusFilter] = useState<string>("aktif");
+  const { query, update } = useStudents({ academicYearId: yearId ?? undefined, classId: classId ?? undefined });
 
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
+  const rows = (query.data ?? []).filter((s) => statusFilter === "all" ? true : (s.status ?? "aktif") === statusFilter);
 
   return (
     <Stack>
@@ -31,14 +34,16 @@ export default function StudentsPage() {
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={(v) => { setYearId(v); setClassId(null); }} clearable />
         <Select label="Kelas" data={classOptions} value={classId} onChange={setClassId} clearable />
+        <Select label="Status" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"},{value:"all",label:"Semua"}]} value={statusFilter} onChange={(v) => setStatusFilter(v ?? "aktif")} />
         <Button onClick={() => query.refetch()} loading={query.isFetching}>Cari</Button>
       </Group>
       <Table>
-        <Table.Thead><Table.Tr><Table.Th>Nama</Table.Th><Table.Th>NIS</Table.Th><Table.Th>NISN</Table.Th><Table.Th>L/P</Table.Th></Table.Tr></Table.Thead>
+        <Table.Thead><Table.Tr><Table.Th>Nama</Table.Th><Table.Th>NIS</Table.Th><Table.Th>NISN</Table.Th><Table.Th>L/P</Table.Th><Table.Th>Status</Table.Th></Table.Tr></Table.Thead>
         <Table.Tbody>
-          {(query.data ?? []).map((s) => (
+          {rows.map((s) => (
             <Table.Tr key={s.id}>
               <Table.Td>{s.namaSiswa}</Table.Td><Table.Td>{s.nis}</Table.Td><Table.Td>{s.nisn}</Table.Td><Table.Td>{s.gender}</Table.Td>
+              <Table.Td><Select size="xs" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"}]} value={s.status ?? "aktif"} onChange={(v) => v && update.mutate({ ...s, status: v as StudentStatus })} /></Table.Td>
             </Table.Tr>
           ))}
         </Table.Tbody>

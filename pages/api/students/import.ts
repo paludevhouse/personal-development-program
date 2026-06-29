@@ -21,7 +21,7 @@ export default methods({
     for (const s of list) {
       let id: string | undefined = s.nisn ? byNisn.get(String(s.nisn)) : undefined;
       if (id) { await repo.update("students", id, { ...s }); updated++; }
-      else { const r = await repo.create("students", { ...s }); id = r.id as string; created++; }
+      else { const r = await repo.create("students", { ...s, status: "aktif" }); id = r.id as string; created++; }
       if (id && !enrolledStudentIds.has(id)) {
         await repo.create("enrollments", { studentId: id, classId, academicYearId });
         enrolledStudentIds.add(id);

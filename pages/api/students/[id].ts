@@ -6,9 +6,11 @@ export default methods({
   PUT: async (req) => {
     await requireAdmin(req);
     const b = req.body ?? {};
+    const allowed = ["aktif", "lulus", "pindah"];
     return repo.update("students", req.query.id as string, {
       namaSiswa: b.namaSiswa, namaBesar: b.namaBesar, namaPendek: b.namaPendek,
       nis: b.nis, nisn: b.nisn, gender: b.gender === "P" ? "P" : "L",
+      status: allowed.includes(b.status) ? b.status : "aktif",
     });
   },
   DELETE: async (req) => {

@@ -24,6 +24,7 @@ export default methods({
     return repo.create("students", {
       namaSiswa: b.namaSiswa, namaBesar: b.namaBesar ?? b.namaSiswa?.toUpperCase() ?? "",
       namaPendek: b.namaPendek ?? "", nis: b.nis ?? "", nisn: b.nisn ?? "", gender: b.gender === "P" ? "P" : "L",
+      status: b.status ?? "aktif",
     });
   },
 });
