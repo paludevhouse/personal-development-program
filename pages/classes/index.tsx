@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button, Group, Select, Stack, Table, TextInput, Title } from "@mantine/core";
+import { Button, Group, Select, Stack, Table, TextInput } from "@mantine/core";
+import { PageHeader } from "@/components/PageHeader";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
@@ -18,7 +19,7 @@ export default function ClassesPage() {
 
   return (
     <Stack>
-      <Title order={2}>Kelas</Title>
+      <PageHeader />
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
         <FormModal title="Tambah Kelas">

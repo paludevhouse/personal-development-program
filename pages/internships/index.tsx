@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button, CopyButton, Group, Select, Stack, Table, TextInput, Title, Badge } from "@mantine/core";
+import { Button, CopyButton, Group, Select, Stack, Table, TextInput, Badge } from "@mantine/core";
+import { PageHeader } from "@/components/PageHeader";
 import { useInternships } from "@/lib/hooks/useInternships";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useStudents } from "@/lib/hooks/useStudents";
@@ -22,7 +23,7 @@ export default function InternshipsPage() {
 
   return (
     <Stack>
-      <Title order={2}>Magang</Title>
+      <PageHeader />
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
         <Button variant="light" onClick={() => studentsHook.query.refetch()}>Muat Siswa</Button>

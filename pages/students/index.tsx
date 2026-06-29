@@ -1,7 +1,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { Button, Group, Select, Stack, Table, Title } from "@mantine/core";
+import { Button, Group, Select, Stack, Table } from "@mantine/core";
+import { PageHeader } from "@/components/PageHeader";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
@@ -26,7 +27,7 @@ export default function StudentsPage() {
 
   return (
     <Stack>
-      <Title order={2}>Siswa</Title>
+      <PageHeader />
       <Group>
         <Button component={Link} href="/students/import" variant="light">Impor Excel</Button>
         <Button variant="light" disabled={!(query.data?.length)} onClick={() => XLSX.writeFile(buildRosterWorkbook(query.data ?? []), "daftar-siswa.xlsx")}>Ekspor Excel</Button>

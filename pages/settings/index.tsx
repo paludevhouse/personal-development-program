@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button, Stack, Textarea, Text, Title } from "@mantine/core";
+import { Button, Stack, Textarea, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { PageHeader } from "@/components/PageHeader";
 import { useWhatsappTemplate } from "@/lib/hooks/useWhatsappTemplate";
 
 export default function SettingsPage() {
@@ -12,7 +13,7 @@ export default function SettingsPage() {
 
   return (
     <Stack maw={640}>
-      <Title order={2}>Pengaturan</Title>
+      <PageHeader />
       <Text fw={500}>Template Pesan WhatsApp</Text>
       <Text size="sm" c="dimmed">
         Placeholder yang tersedia: {"{pic}"}, {"{siswa}"}, {"{perusahaan}"}, {"{link}"}

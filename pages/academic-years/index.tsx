@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Button, Group, Table, TextInput, Select, Switch, Title, Stack } from "@mantine/core";
+import { Button, Group, Table, TextInput, Select, Switch, Stack } from "@mantine/core";
+import { PageHeader } from "@/components/PageHeader";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { FormModal } from "@/components/FormModal";
 
@@ -13,7 +14,7 @@ export default function AcademicYearsPage() {
 
   return (
     <Stack>
-      <Title order={2}>Tahun Ajaran</Title>
+      <PageHeader />
       <Group align="end">
         <FormModal title="Tambah Tahun Ajaran">
           {(close) => (

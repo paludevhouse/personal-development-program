@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import { ActionIcon, Button, Group, Stack, Table, TextInput, Title, Tooltip } from "@mantine/core";
+import { ActionIcon, Button, Group, Stack, Table, TextInput, Tooltip } from "@mantine/core";
+import { PageHeader } from "@/components/PageHeader";
 import { useCompanies } from "@/lib/hooks/useCompanies";
 import { buildCompaniesWorkbook } from "@/lib/excel/exportCompanies";
 import { waLink } from "@/lib/contact/waLink";
@@ -27,7 +28,7 @@ export default function MasterMagangPage() {
 
   return (
     <Stack>
-      <Title order={2}>Master Magang</Title>
+      <PageHeader />
       <Group>
         <Button variant="light" disabled={!companies.length} onClick={() => XLSX.writeFile(buildCompaniesWorkbook(companies), "master-magang.xlsx")}>Ekspor Excel</Button>
       </Group>
