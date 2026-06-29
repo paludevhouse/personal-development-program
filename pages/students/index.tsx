@@ -2,6 +2,7 @@ import { useState } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
 import { Button, Group, Select, Stack, Table } from "@mantine/core";
+import { MagnifyingGlass, UploadSimple, DownloadSimple } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/PageHeader";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useClasses } from "@/lib/hooks/useClasses";
@@ -29,14 +30,14 @@ export default function StudentsPage() {
     <Stack>
       <PageHeader />
       <Group>
-        <Button component={Link} href="/students/import" variant="light">Impor Excel</Button>
-        <Button variant="light" disabled={!(query.data?.length)} onClick={() => XLSX.writeFile(buildRosterWorkbook(query.data ?? []), "daftar-siswa.xlsx")}>Ekspor Excel</Button>
+        <Button component={Link} href="/students/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
+        <Button variant="light" disabled={!(query.data?.length)} onClick={() => XLSX.writeFile(buildRosterWorkbook(query.data ?? []), "daftar-siswa.xlsx")} leftSection={<DownloadSimple size={16} weight="bold" />}>Ekspor Excel</Button>
       </Group>
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={(v) => { setYearId(v); setClassId(null); }} clearable />
         <Select label="Kelas" data={classOptions} value={classId} onChange={setClassId} clearable />
         <Select label="Status" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"},{value:"all",label:"Semua"}]} value={statusFilter} onChange={(v) => setStatusFilter(v ?? "aktif")} />
-        <Button onClick={() => query.refetch()} loading={query.isFetching}>Cari</Button>
+        <Button onClick={() => query.refetch()} loading={query.isFetching} leftSection={<MagnifyingGlass size={16} weight="bold" />}>Cari</Button>
       </Group>
       <Table>
         <Table.Thead><Table.Tr><Table.Th>Nama</Table.Th><Table.Th>NIS</Table.Th><Table.Th>NISN</Table.Th><Table.Th>L/P</Table.Th><Table.Th>Status</Table.Th></Table.Tr></Table.Thead>

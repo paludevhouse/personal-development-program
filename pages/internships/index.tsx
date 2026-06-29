@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { z } from "zod";
 import { Button, CopyButton, Group, Select, Stack, Table, TextInput, Badge } from "@mantine/core";
+import { Users, LinkSimple } from "@phosphor-icons/react";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
@@ -38,7 +39,7 @@ export default function InternshipsPage() {
       <PageHeader />
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
-        <Button variant="light" onClick={() => studentsHook.query.refetch()}>Muat Siswa</Button>
+        <Button variant="light" onClick={() => studentsHook.query.refetch()} leftSection={<Users size={16} weight="bold" />}>Muat Siswa</Button>
         <FormModal title="Tambah Penempatan" buttonLabel="Tambah Penempatan">
           {(close) => (
             <form onSubmit={form.onSubmit((values) => { create.mutate({ academicYearId: yearId!, studentId: studentId!, lokasiMagang: values.lokasiMagang, posisi: values.posisi, pembimbing: values.pembimbing }); form.reset(); setStudentId(null); close(); })}>
@@ -64,7 +65,7 @@ export default function InternshipsPage() {
                 <Table.Td><Badge color={it.status === "graded" ? "green" : "gray"}>{it.status === "graded" ? "Dinilai" : "Menunggu"}</Badge></Table.Td>
                 <Table.Td>{it.nilaiAkhir != null ? it.nilaiAkhir.toFixed(2) : "-"}</Table.Td>
                 <Table.Td>{it.kategori ?? "-"}</Table.Td>
-                <Table.Td><CopyButton value={link}>{({ copied, copy }) => <Button size="xs" variant="light" onClick={copy}>{copied ? "Tersalin" : "Salin Link"}</Button>}</CopyButton></Table.Td>
+                <Table.Td><CopyButton value={link}>{({ copied, copy }) => <Button size="xs" variant="light" onClick={copy} leftSection={<LinkSimple size={14} weight="bold" />}>{copied ? "Tersalin" : "Salin Link"}</Button>}</CopyButton></Table.Td>
                 <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(it.id)}>Hapus</Button></Table.Td>
               </Table.Tr>
             );

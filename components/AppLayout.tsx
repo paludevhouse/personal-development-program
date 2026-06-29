@@ -1,15 +1,16 @@
 import { AppShell, NavLink, Title, Group, Box, Paper } from "@mantine/core";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { House, Student, Chalkboard, CalendarBlank, Briefcase, Buildings, Gear } from "@phosphor-icons/react";
 
 const NAV = [
-  { href: "/", label: "Dasbor" },
-  { href: "/students", label: "Siswa" },
-  { href: "/classes", label: "Kelas" },
-  { href: "/academic-years", label: "Tahun Ajaran" },
-  { href: "/internships", label: "Magang" },
-  { href: "/master-magang", label: "Master Magang" },
-  { href: "/settings", label: "Pengaturan" },
+  { href: "/", label: "Dasbor", Icon: House },
+  { href: "/students", label: "Siswa", Icon: Student },
+  { href: "/classes", label: "Kelas", Icon: Chalkboard },
+  { href: "/academic-years", label: "Tahun Ajaran", Icon: CalendarBlank },
+  { href: "/internships", label: "Magang", Icon: Briefcase },
+  { href: "/master-magang", label: "Master Magang", Icon: Buildings },
+  { href: "/settings", label: "Pengaturan", Icon: Gear },
 ];
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
@@ -43,6 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             variant="light"
             mb={4}
             style={{ borderRadius: "var(--mantine-radius-md)" }}
+            leftSection={<n.Icon size={18} weight="duotone" />}
           />
         ))}
       </AppShell.Navbar>

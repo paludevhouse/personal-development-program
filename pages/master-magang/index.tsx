@@ -1,5 +1,6 @@
 import * as XLSX from "xlsx";
 import { ActionIcon, Button, Group, Stack, Table, TextInput, Tooltip } from "@mantine/core";
+import { WhatsappLogo, DownloadSimple } from "@phosphor-icons/react";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
@@ -25,7 +26,7 @@ export default function MasterMagangPage() {
     <Stack>
       <PageHeader />
       <Group>
-        <Button variant="light" disabled={!companies.length} onClick={() => XLSX.writeFile(buildCompaniesWorkbook(companies), "master-magang.xlsx")}>Ekspor Excel</Button>
+        <Button variant="light" disabled={!companies.length} onClick={() => XLSX.writeFile(buildCompaniesWorkbook(companies), "master-magang.xlsx")} leftSection={<DownloadSimple size={16} weight="bold" />}>Ekspor Excel</Button>
       </Group>
       <Group align="end">
         <FormModal title="Tambah Perusahaan">
@@ -54,7 +55,7 @@ export default function MasterMagangPage() {
                 <Table.Td>{c.perusahaan}</Table.Td><Table.Td>{c.pic}</Table.Td><Table.Td>{c.phone}</Table.Td><Table.Td>{c.alamat}</Table.Td>
                 <Table.Td>
                   <Tooltip label={wa ? "Chat WhatsApp" : "Nomor tidak valid"}>
-                    <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={waHref ?? undefined} target="_blank" rel="noopener noreferrer">WA</ActionIcon>
+                    <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={waHref ?? undefined} target="_blank" rel="noopener noreferrer"><WhatsappLogo size={18} weight="fill" /></ActionIcon>
                   </Tooltip>
                 </Table.Td>
                 <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button></Table.Td>
