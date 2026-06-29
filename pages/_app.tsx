@@ -12,6 +12,7 @@ import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AppLayout } from "@/components/AppLayout";
 import { routeMeta, APP_NAME } from "@/lib/routes";
+import { theme } from "@/lib/theme";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export type NextPageWithLayout<P = {}> = NextPage<P> & {
@@ -29,7 +30,7 @@ export default function App({ Component, pageProps }: AppProps & { Component: Ne
       <Head>
         <title>{pageTitle}</title>
       </Head>
-      <MantineProvider>
+      <MantineProvider theme={theme}>
         <Notifications />
         <QueryClientProvider client={qc}>
           {getLayout(<Component {...pageProps} />)}
