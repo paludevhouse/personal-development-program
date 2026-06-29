@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
-import { Button, Card, Group, Select, Stack, Title, Text, Alert } from "@mantine/core";
+import { Button, Card, Group, Select, Stack, Title, Text, Alert, TextInput } from "@mantine/core";
 import { http } from "@/lib/api/http";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
@@ -16,9 +16,12 @@ const RATING_OPTIONS = [
 const GradePage: NextPageWithLayout = () => {
   const router = useRouter();
   const token = router.query.token as string | undefined;
-  const [info, setInfo] = useState<{ studentName: string; lokasiMagang: string; posisi: string; status: string } | null>(null);
+  const [info, setInfo] = useState<{ studentName: string; lokasiMagang: string; posisi: string; pembimbing: string; status: string } | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [ratings, setRatings] = useState<Partial<InternshipRatings>>({});
+  const [lokasiMagang, setLokasiMagang] = useState("");
+  const [posisi, setPosisi] = useState("");
+  const [pembimbing, setPembimbing] = useState("");
   const [done, setDone] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -28,16 +31,21 @@ const GradePage: NextPageWithLayout = () => {
     http.get(`/api/grade/${token}`)
       .then((r) => {
         setInfo(r.data);
+        setLokasiMagang(r.data.lokasiMagang ?? "");
+        setPosisi(r.data.posisi ?? "");
+        setPembimbing(r.data.pembimbing ?? "");
         if (r.data.status === "graded") setDone(true);
       })
       .catch(() => setNotFound(true));
   }, [token]);
 
   async function submit() {
-    if (CRITERIA.some((c) => !ratings[c.key])) { setError("Mohon isi semua kriteria"); return; }
+    if (CRITERIA.some((c) => !ratings[c.key]) || !lokasiMagang || !posisi || !pembimbing) {
+      setError("Mohon lengkapi semua data dan kriteria"); return;
+    }
     setSaving(true); setError("");
     try {
-      await http.post(`/api/grade/${token}`, { ratings });
+      await http.post(`/api/grade/${token}`, { ratings, lokasiMagang, posisi, pembimbing });
       setDone(true);
     } catch (e) {
       if (axios.isAxiosError(e) && e.response?.status === 409) {
@@ -56,11 +64,13 @@ const GradePage: NextPageWithLayout = () => {
       <Stack>
         <Title order={3}>Penilaian Magang</Title>
         <Text><b>Siswa:</b> {info.studentName}</Text>
-        <Text><b>Lokasi:</b> {info.lokasiMagang} — {info.posisi}</Text>
         {done ? (
           <Alert color="green">Terima kasih. Penilaian telah dikirim.</Alert>
         ) : (
           <>
+            <TextInput label="Lokasi Magang" value={lokasiMagang} onChange={(e) => setLokasiMagang(e.currentTarget.value)} />
+            <TextInput label="Posisi" value={posisi} onChange={(e) => setPosisi(e.currentTarget.value)} />
+            <TextInput label="Pembimbing (PIC)" value={pembimbing} onChange={(e) => setPembimbing(e.currentTarget.value)} />
             {CRITERIA.map((c) => (
               <Select key={c.key} label={c.label} data={RATING_OPTIONS}
                 value={ratings[c.key] ?? null}

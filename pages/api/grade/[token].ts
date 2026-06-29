@@ -29,14 +29,21 @@ export default methods({
     const it = await findByToken(token);
     if (!it) throw new ApiError(404, "not found");
     if (it.status === "graded") throw new ApiError(409, "already graded");
-    const { ratings } = (req.body ?? {}) as { ratings: InternshipRatings };
+    const { ratings, lokasiMagang, posisi, pembimbing } = (req.body ?? {}) as {
+      ratings: InternshipRatings; lokasiMagang?: string; posisi?: string; pembimbing?: string;
+    };
     let grade;
     try {
       grade = computeGrade(ratings); // throws if incomplete
     } catch {
       throw new ApiError(400, "ratings incomplete");
     }
-    await repo.update("internships", it.id as string, { ratings, nilaiAkhir: grade.nilaiAkhir, kategori: grade.kategori, status: "graded" });
+    await repo.update("internships", it.id as string, {
+      lokasiMagang: lokasiMagang ?? it.lokasiMagang ?? "",
+      posisi: posisi ?? it.posisi ?? "",
+      pembimbing: pembimbing ?? it.pembimbing ?? "",
+      ratings, nilaiAkhir: grade.nilaiAkhir, kategori: grade.kategori, status: "graded",
+    });
     return { ok: true, nilaiAkhir: grade.nilaiAkhir, kategori: grade.kategori };
   },
 });
