@@ -8,13 +8,14 @@ import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 export default function InternshipsPage() {
   const years = useAcademicYears();
   const [yearId, setYearId] = useState<string | null>(null);
-  useDefaultYear(years.data.data ?? [], yearId, setYearId);
+  const activeYears = (years.data.data ?? []).filter((y) => y.isActive);
+  useDefaultYear(activeYears, yearId, setYearId);
   const { data, create, remove } = useInternships(yearId ?? undefined);
   const studentsHook = useStudents({ academicYearId: yearId ?? undefined });
   const [studentId, setStudentId] = useState<string | null>(null);
   const [lokasi, setLokasi] = useState(""); const [posisi, setPosisi] = useState(""); const [pembimbing, setPembimbing] = useState("");
 
-  const yearOptions = (years.data.data ?? []).map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
   const studentOptions = (studentsHook.query.data ?? []).map((s) => ({ value: s.id, label: s.namaSiswa }));
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 

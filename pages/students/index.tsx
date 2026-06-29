@@ -12,12 +12,13 @@ export default function StudentsPage() {
   const years = useAcademicYears();
   const [yearId, setYearId] = useState<string | null>(null);
   const yearsList = years.data.data ?? [];
-  useDefaultYear(yearsList, yearId, setYearId);
+  const activeYears = yearsList.filter((y) => y.isActive);
+  useDefaultYear(activeYears, yearId, setYearId);
   const classes = useClasses(yearId ?? undefined);
   const [classId, setClassId] = useState<string | null>(null);
   const { query } = useStudents({ academicYearId: yearId ?? undefined, classId: classId ?? undefined });
 
-  const yearOptions = yearsList.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
 
   return (

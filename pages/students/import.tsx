@@ -37,7 +37,8 @@ export default function ImportPage() {
     } finally { setSaving(false); }
   }
 
-  const yearOptions = (years.data.data ?? []).map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const activeYears = (years.data.data ?? []).filter((y) => y.isActive);
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
 
   return (
