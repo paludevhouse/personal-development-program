@@ -4,6 +4,7 @@ import { useInternships } from "@/lib/hooks/useInternships";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
+import { FormModal } from "@/components/FormModal";
 
 export default function InternshipsPage() {
   const years = useAcademicYears();
@@ -25,11 +26,17 @@ export default function InternshipsPage() {
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
         <Button variant="light" onClick={() => studentsHook.query.refetch()}>Muat Siswa</Button>
-        <Select label="Siswa" data={studentOptions} value={studentId} onChange={setStudentId} searchable />
-        <TextInput label="Lokasi Magang" value={lokasi} onChange={(e) => setLokasi(e.currentTarget.value)} />
-        <TextInput label="Posisi" value={posisi} onChange={(e) => setPosisi(e.currentTarget.value)} />
-        <TextInput label="Pembimbing" value={pembimbing} onChange={(e) => setPembimbing(e.currentTarget.value)} />
-        <Button disabled={!yearId || !studentId} onClick={() => create.mutate({ academicYearId: yearId!, studentId: studentId!, lokasiMagang: lokasi, posisi, pembimbing })}>Tambah Penempatan</Button>
+        <FormModal title="Tambah Penempatan" buttonLabel="Tambah Penempatan">
+          {(close) => (
+            <Stack>
+              <Select label="Siswa" data={studentOptions} value={studentId} onChange={setStudentId} searchable />
+              <TextInput label="Lokasi Magang" value={lokasi} onChange={(e) => setLokasi(e.currentTarget.value)} />
+              <TextInput label="Posisi" value={posisi} onChange={(e) => setPosisi(e.currentTarget.value)} />
+              <TextInput label="Pembimbing" value={pembimbing} onChange={(e) => setPembimbing(e.currentTarget.value)} />
+              <Button disabled={!yearId || !studentId} onClick={() => { create.mutate({ academicYearId: yearId!, studentId: studentId!, lokasiMagang: lokasi, posisi, pembimbing }); setLokasi(""); setPosisi(""); setPembimbing(""); setStudentId(null); close(); }}>Simpan</Button>
+            </Stack>
+          )}
+        </FormModal>
       </Group>
       <Table>
         <Table.Thead><Table.Tr><Table.Th>Lokasi</Table.Th><Table.Th>Posisi</Table.Th><Table.Th>Status</Table.Th><Table.Th>Nilai</Table.Th><Table.Th>Kategori</Table.Th><Table.Th>Link PIC</Table.Th><Table.Th /></Table.Tr></Table.Thead>

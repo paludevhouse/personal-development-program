@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Group, Table, TextInput, Select, Switch, Title, Stack } from "@mantine/core";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
+import { FormModal } from "@/components/FormModal";
 
 const SEMESTER_OPTIONS = ["1 (Satu)", "2 (Dua)"];
 
@@ -14,10 +15,16 @@ export default function AcademicYearsPage() {
     <Stack>
       <Title order={2}>Tahun Ajaran</Title>
       <Group align="end">
-        <TextInput label="Tahun" placeholder="2025/2026" value={year} onChange={(e) => setYear(e.currentTarget.value)} />
-        <Select label="Semester" data={SEMESTER_OPTIONS} value={semester} onChange={(v) => setSemester(v ?? "1 (Satu)")} allowDeselect={false} />
-        <Switch label="Aktif" checked={isActive} onChange={(e) => setIsActive(e.currentTarget.checked)} />
-        <Button onClick={() => create.mutate({ year, semester, isActive })}>Tambah</Button>
+        <FormModal title="Tambah Tahun Ajaran">
+          {(close) => (
+            <Stack>
+              <TextInput label="Tahun" placeholder="2025/2026" value={year} onChange={(e) => setYear(e.currentTarget.value)} />
+              <Select label="Semester" data={SEMESTER_OPTIONS} value={semester} onChange={(v) => setSemester(v ?? "1 (Satu)")} allowDeselect={false} />
+              <Switch label="Aktif" checked={isActive} onChange={(e) => setIsActive(e.currentTarget.checked)} />
+              <Button onClick={() => { create.mutate({ year, semester, isActive }); setYear(""); setIsActive(false); close(); }}>Simpan</Button>
+            </Stack>
+          )}
+        </FormModal>
       </Group>
       <Table>
         <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Semester</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>

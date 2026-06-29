@@ -3,6 +3,7 @@ import { Button, Group, Select, Stack, Table, TextInput, Title } from "@mantine/
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
+import { FormModal } from "@/components/FormModal";
 
 export default function ClassesPage() {
   const years = useAcademicYears();
@@ -20,9 +21,15 @@ export default function ClassesPage() {
       <Title order={2}>Kelas</Title>
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
-        <TextInput label="Nama Kelas" placeholder="XII.1" value={name} onChange={(e) => setName(e.currentTarget.value)} />
-        <TextInput label="Wali Kelas" value={wali} onChange={(e) => setWali(e.currentTarget.value)} />
-        <Button disabled={!yearId} onClick={() => create.mutate({ name, academicYearId: yearId!, waliKelas: wali })}>Tambah</Button>
+        <FormModal title="Tambah Kelas">
+          {(close) => (
+            <Stack>
+              <TextInput label="Nama Kelas" placeholder="XII.1" value={name} onChange={(e) => setName(e.currentTarget.value)} />
+              <TextInput label="Wali Kelas" value={wali} onChange={(e) => setWali(e.currentTarget.value)} />
+              <Button disabled={!yearId} onClick={() => { create.mutate({ name, academicYearId: yearId!, waliKelas: wali }); setName(""); setWali(""); close(); }}>Simpan</Button>
+            </Stack>
+          )}
+        </FormModal>
       </Group>
       <Table>
         <Table.Thead><Table.Tr><Table.Th>Kelas</Table.Th><Table.Th>Wali Kelas</Table.Th><Table.Th /></Table.Tr></Table.Thead>

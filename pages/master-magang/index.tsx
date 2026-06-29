@@ -4,6 +4,7 @@ import { ActionIcon, Button, Group, Stack, Table, TextInput, Title, Tooltip } fr
 import { useCompanies } from "@/lib/hooks/useCompanies";
 import { buildCompaniesWorkbook } from "@/lib/excel/exportCompanies";
 import { waLink } from "@/lib/contact/waLink";
+import { FormModal } from "@/components/FormModal";
 
 export default function MasterMagangPage() {
   const { data, create, remove } = useCompanies();
@@ -13,10 +14,11 @@ export default function MasterMagangPage() {
   const [alamat, setAlamat] = useState("");
   const companies = data.data ?? [];
 
-  function add() {
+  function add(close: () => void) {
     if (!perusahaan) return;
     create.mutate({ perusahaan, pic, phone, alamat });
     setPerusahaan(""); setPic(""); setPhone(""); setAlamat("");
+    close();
   }
 
   return (
@@ -26,11 +28,17 @@ export default function MasterMagangPage() {
         <Button variant="light" disabled={!companies.length} onClick={() => XLSX.writeFile(buildCompaniesWorkbook(companies), "master-magang.xlsx")}>Ekspor Excel</Button>
       </Group>
       <Group align="end">
-        <TextInput label="Perusahaan" value={perusahaan} onChange={(e) => setPerusahaan(e.currentTarget.value)} />
-        <TextInput label="PIC" value={pic} onChange={(e) => setPic(e.currentTarget.value)} />
-        <TextInput label="No. Telepon" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
-        <TextInput label="Alamat" value={alamat} onChange={(e) => setAlamat(e.currentTarget.value)} />
-        <Button disabled={!perusahaan} onClick={add}>Tambah</Button>
+        <FormModal title="Tambah Perusahaan">
+          {(close) => (
+            <Stack>
+              <TextInput label="Perusahaan" value={perusahaan} onChange={(e) => setPerusahaan(e.currentTarget.value)} />
+              <TextInput label="PIC" value={pic} onChange={(e) => setPic(e.currentTarget.value)} />
+              <TextInput label="No. Telepon" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
+              <TextInput label="Alamat" value={alamat} onChange={(e) => setAlamat(e.currentTarget.value)} />
+              <Button disabled={!perusahaan} onClick={() => add(close)}>Simpan</Button>
+            </Stack>
+          )}
+        </FormModal>
       </Group>
       <Table>
         <Table.Thead><Table.Tr><Table.Th>Perusahaan</Table.Th><Table.Th>PIC</Table.Th><Table.Th>No. Telepon</Table.Th><Table.Th>Alamat</Table.Th><Table.Th>WhatsApp</Table.Th><Table.Th /></Table.Tr></Table.Thead>
