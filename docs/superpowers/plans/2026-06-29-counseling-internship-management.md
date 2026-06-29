@@ -2199,3 +2199,19 @@ Run: `npm test` (waLink + exportCompanies pass; suite green) and `npm run build`
 ```bash
 git add -A && git commit -m "feat: Master Magang company master + WhatsApp link + Excel export"
 ```
+
+---
+
+## Backlog — v1.1 enhancements (requested 2026-06-29)
+
+Each becomes its own implement→review task. Decisions already made noted inline.
+
+- **Task 14 — Active/inactive filtering.** Hide inactive academic years from all selection dropdowns (show active-only by default; management page still lists all to toggle). Don't surface data tied to inactive years in pickers.
+- **Task 15 — Student status.** Add `status: "aktif" | "lulus" | "pindah"` to `Student` (default `"aktif"`; import sets `"aktif"`). Filter students by status (default shows `aktif`), so graduated/moved students can be hidden. Status editable per student.
+- **Task 16 — Create-form modal.** A reusable "Tambah/Create" button that opens a Mantine modal form (replacing inline field rows) across CRUD pages.
+- **Task 17 — PIC fills placement + grade.** Expand the public token form so the PIC fills lokasi magang / posisi / pembimbing (placement details) in addition to the 7 criteria. Public token endpoint accepts placement fields on submit. (Decision: PIC fills placement details themselves.)
+- **Task 18 — WhatsApp message template manager.** Settings page to edit ONE global message template with placeholders `{pic} {siswa} {perusahaan} {link}` (link = PIC grading URL). Stored in Firestore (`settings/whatsapp`). WhatsApp buttons open `wa.me/<number>?text=<filled template>`. (Decision: global template w/ placeholders.)
+- **Task 19 — Route titles + details.** Centralized route metadata (a `routes` config): per-route browser `<title>` (next/head) + page heading/description, managed in one place.
+- **Task 20 — Export/Import + Zod validation.** Add Zod schemas validating all create/edit forms (and import rows); extend Excel export/import coverage where missing.
+
+**Hard gate:** All of the above are buildable as code, but NONE can be seeded or live-tested until the Firestore `(default)` database exists (currently the project has zero databases — see "create data" blocker). Live verification of every task above is deferred until then.
