@@ -1,9 +1,12 @@
 import { useState } from "react";
+import Link from "next/link";
+import * as XLSX from "xlsx";
 import { Button, Group, Select, Stack, Table, Title } from "@mantine/core";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
+import { buildRosterWorkbook } from "@/lib/excel/exportRoster";
 
 export default function StudentsPage() {
   const years = useAcademicYears();
@@ -20,6 +23,10 @@ export default function StudentsPage() {
   return (
     <Stack>
       <Title order={2}>Siswa</Title>
+      <Group>
+        <Button component={Link} href="/students/import" variant="light">Impor Excel</Button>
+        <Button variant="light" disabled={!(query.data?.length)} onClick={() => XLSX.writeFile(buildRosterWorkbook(query.data ?? []), "daftar-siswa.xlsx")}>Ekspor Excel</Button>
+      </Group>
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={(v) => { setYearId(v); setClassId(null); }} clearable />
         <Select label="Kelas" data={classOptions} value={classId} onChange={setClassId} clearable />
