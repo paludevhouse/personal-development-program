@@ -1,29 +1,23 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AcademicYear } from "@/lib/types";
+import { http, getJson } from "@/lib/api/http";
 
 const KEY = ["academic-years"];
-async function jsonFetch(url: string, init?: RequestInit) {
-  const res = await fetch(url, init);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
 
 export function useAcademicYears() {
   const qc = useQueryClient();
-  const data = useQuery<AcademicYear[]>({ queryKey: KEY, queryFn: () => jsonFetch("/api/academic-years") });
+  const data = useQuery<AcademicYear[]>({ queryKey: KEY, queryFn: () => getJson<AcademicYear[]>("/api/academic-years") });
   const invalidate = () => qc.invalidateQueries({ queryKey: KEY });
   const create = useMutation({
-    mutationFn: (b: Partial<AcademicYear>) =>
-      jsonFetch("/api/academic-years", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }),
+    mutationFn: (b: Partial<AcademicYear>) => http.post("/api/academic-years", b).then((r) => r.data),
     onSuccess: invalidate,
   });
   const update = useMutation({
-    mutationFn: (b: AcademicYear) =>
-      jsonFetch(`/api/academic-years/${b.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }),
+    mutationFn: (b: AcademicYear) => http.put(`/api/academic-years/${b.id}`, b).then((r) => r.data),
     onSuccess: invalidate,
   });
   const remove = useMutation({
-    mutationFn: (id: string) => jsonFetch(`/api/academic-years/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) => http.delete(`/api/academic-years/${id}`).then((r) => r.data),
     onSuccess: invalidate,
   });
   return { data, create, update, remove };

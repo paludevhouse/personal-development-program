@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
+import { http } from "@/lib/api/http";
 import { Button, Card, PasswordInput, TextInput, Title, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import type { NextPageWithLayout } from "@/pages/_app";
@@ -17,12 +18,7 @@ const LoginPage: NextPageWithLayout = () => {
     try {
       const cred = await signInWithEmailAndPassword(getClientAuth(), email, password);
       const idToken = await cred.user.getIdToken();
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-      if (!res.ok) throw new Error("login gagal");
+      await http.post("/api/auth/login", { idToken });
       router.push("/");
     } catch {
       notifications.show({ color: "red", message: "Email atau kata sandi salah" });
