@@ -1,4 +1,4 @@
-# MBC Counseling & Internship Management Implementation Plan
+# MDC Counseling & Internship Management Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -107,7 +107,7 @@ import "@mantine/dates/styles.css";
 import { ColorSchemeScript } from "@mantine/core";
 import { Providers } from "./providers";
 
-export const metadata = { title: "MBC Management" };
+export const metadata = { title: "MDC Management" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -123,7 +123,7 @@ Replace `app/page.tsx`:
 ```tsx
 import { Title } from "@mantine/core";
 export default function Home() {
-  return <Title order={1}>MBC Management</Title>;
+  return <Title order={1}>MDC Management</Title>;
 }
 ```
 
@@ -714,7 +714,7 @@ import Link from "next/link";
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AppShell header={{ height: 56 }} navbar={{ width: 220, breakpoint: "sm" }} padding="md">
-      <AppShell.Header><Group h="100%" px="md"><Title order={4}>MBC Management</Title></Group></AppShell.Header>
+      <AppShell.Header><Group h="100%" px="md"><Title order={4}>MDC Management</Title></Group></AppShell.Header>
       <AppShell.Navbar p="xs">
         <NavLink component={Link} href="/" label="Dasbor" />
         <NavLink component={Link} href="/students" label="Siswa" />
