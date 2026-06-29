@@ -14,6 +14,7 @@
 - UI library: **Mantine v7**. Use Mantine components, not hand-rolled HTML/CSS.
 - All UI copy in **Indonesian**.
 - Client code **never** imports `firebase-admin` or queries Firestore directly. All data access via `pages/api/*` routes consumed through TanStack Query.
+- Client HTTP uses the shared **axios** instance `http` from `lib/api/http.ts` (and the `getJson<T>(url)` helper). Do NOT use `fetch` in client code. Axios rejects on non-2xx, so handle errors via `try/catch` and `error.response?.status` rather than `res.ok`. (`lib/api/http.ts` already exists.)
 - API routes use `NextApiRequest`/`NextApiResponse`; dynamic params come from `req.query`. Handlers run on the default Node runtime.
 - Filters do **not** query live — results load only on explicit **Search** button click.
 - Gender stored as `"L"` or `"P"`.
@@ -45,7 +46,7 @@ npx create-next-app@14 . --typescript --no-app --no-tailwind --no-src-dir --esli
 - [ ] **Step 2: Install dependencies**
 
 ```bash
-npm install @mantine/core@^7 @mantine/hooks@^7 @mantine/notifications@^7 @mantine/dates@^7 @tanstack/react-query@^5 firebase firebase-admin xlsx dayjs
+npm install @mantine/core@^7 @mantine/hooks@^7 @mantine/notifications@^7 @mantine/dates@^7 @tanstack/react-query@^5 axios firebase firebase-admin xlsx dayjs
 npm install -D vitest @vitejs/plugin-react jsdom @testing-library/react @testing-library/jest-dom postcss postcss-preset-mantine postcss-simple-vars
 ```
 
@@ -592,6 +593,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
+import { http } from "@/lib/api/http";
 import { Button, Card, PasswordInput, TextInput, Title, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import type { NextPageWithLayout } from "@/pages/_app";
@@ -607,12 +609,7 @@ const LoginPage: NextPageWithLayout = () => {
     try {
       const cred = await signInWithEmailAndPassword(getClientAuth(), email, password);
       const idToken = await cred.user.getIdToken();
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
-      });
-      if (!res.ok) throw new Error("login gagal");
+      await http.post("/api/auth/login", { idToken });
       router.push("/");
     } catch {
       notifications.show({ color: "red", message: "Email atau kata sandi salah" });
@@ -754,30 +751,24 @@ Create `lib/hooks/useAcademicYears.ts`:
 ```ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AcademicYear } from "@/lib/types";
+import { http, getJson } from "@/lib/api/http";
 
 const KEY = ["academic-years"];
-async function jsonFetch(url: string, init?: RequestInit) {
-  const res = await fetch(url, init);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
 
 export function useAcademicYears() {
   const qc = useQueryClient();
-  const data = useQuery<AcademicYear[]>({ queryKey: KEY, queryFn: () => jsonFetch("/api/academic-years") });
+  const data = useQuery<AcademicYear[]>({ queryKey: KEY, queryFn: () => getJson<AcademicYear[]>("/api/academic-years") });
   const invalidate = () => qc.invalidateQueries({ queryKey: KEY });
   const create = useMutation({
-    mutationFn: (b: Partial<AcademicYear>) =>
-      jsonFetch("/api/academic-years", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }),
+    mutationFn: (b: Partial<AcademicYear>) => http.post("/api/academic-years", b).then((r) => r.data),
     onSuccess: invalidate,
   });
   const update = useMutation({
-    mutationFn: (b: AcademicYear) =>
-      jsonFetch(`/api/academic-years/${b.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }),
+    mutationFn: (b: AcademicYear) => http.put(`/api/academic-years/${b.id}`, b).then((r) => r.data),
     onSuccess: invalidate,
   });
   const remove = useMutation({
-    mutationFn: (id: string) => jsonFetch(`/api/academic-years/${id}`, { method: "DELETE" }),
+    mutationFn: (id: string) => http.delete(`/api/academic-years/${id}`).then((r) => r.data),
     onSuccess: invalidate,
   });
   return { data, create, update, remove };
@@ -895,22 +886,17 @@ Create `lib/hooks/useClasses.ts`:
 ```ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { SchoolClass } from "@/lib/types";
-
-async function jsonFetch(url: string, init?: RequestInit) {
-  const res = await fetch(url, init);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
+import { http, getJson } from "@/lib/api/http";
 
 export function useClasses(academicYearId?: string) {
   const qc = useQueryClient();
   const key = ["classes", academicYearId ?? "all"];
   const url = academicYearId ? `/api/classes?academicYearId=${academicYearId}` : "/api/classes";
-  const data = useQuery<SchoolClass[]>({ queryKey: key, queryFn: () => jsonFetch(url) });
+  const data = useQuery<SchoolClass[]>({ queryKey: key, queryFn: () => getJson<SchoolClass[]>(url) });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["classes"] });
-  const create = useMutation({ mutationFn: (b: Partial<SchoolClass>) => jsonFetch("/api/classes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }), onSuccess: invalidate });
-  const update = useMutation({ mutationFn: (b: SchoolClass) => jsonFetch(`/api/classes/${b.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }), onSuccess: invalidate });
-  const remove = useMutation({ mutationFn: (id: string) => jsonFetch(`/api/classes/${id}`, { method: "DELETE" }), onSuccess: invalidate });
+  const create = useMutation({ mutationFn: (b: Partial<SchoolClass>) => http.post("/api/classes", b).then((r) => r.data), onSuccess: invalidate });
+  const update = useMutation({ mutationFn: (b: SchoolClass) => http.put(`/api/classes/${b.id}`, b).then((r) => r.data), onSuccess: invalidate });
+  const remove = useMutation({ mutationFn: (id: string) => http.delete(`/api/classes/${id}`).then((r) => r.data), onSuccess: invalidate });
   return { data, create, update, remove };
 }
 ```
@@ -1046,12 +1032,7 @@ Create `lib/hooks/useStudents.ts`:
 ```ts
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Student } from "@/lib/types";
-
-async function jsonFetch(url: string, init?: RequestInit) {
-  const res = await fetch(url, init);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
+import { http, getJson } from "@/lib/api/http";
 
 export function useStudents(filters: { classId?: string; academicYearId?: string }) {
   const params = new URLSearchParams();
@@ -1059,12 +1040,12 @@ export function useStudents(filters: { classId?: string; academicYearId?: string
   if (filters.academicYearId) params.set("academicYearId", filters.academicYearId);
   const query = useQuery<Student[]>({
     queryKey: ["students", filters],
-    queryFn: () => jsonFetch(`/api/students?${params.toString()}`),
+    queryFn: () => getJson<Student[]>(`/api/students?${params.toString()}`),
     enabled: false, // manual: only runs on refetch() (Search button)
   });
-  const create = useMutation({ mutationFn: (b: Partial<Student>) => jsonFetch("/api/students", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }), onSuccess: () => query.refetch() });
-  const update = useMutation({ mutationFn: (b: Student) => jsonFetch(`/api/students/${b.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }), onSuccess: () => query.refetch() });
-  const remove = useMutation({ mutationFn: (id: string) => jsonFetch(`/api/students/${id}`, { method: "DELETE" }), onSuccess: () => query.refetch() });
+  const create = useMutation({ mutationFn: (b: Partial<Student>) => http.post("/api/students", b).then((r) => r.data), onSuccess: () => query.refetch() });
+  const update = useMutation({ mutationFn: (b: Student) => http.put(`/api/students/${b.id}`, b).then((r) => r.data), onSuccess: () => query.refetch() });
+  const remove = useMutation({ mutationFn: (id: string) => http.delete(`/api/students/${id}`).then((r) => r.data), onSuccess: () => query.refetch() });
   return { query, create, update, remove };
 }
 ```
@@ -1358,6 +1339,7 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 import { Button, FileInput, Group, Select, Stack, Table, Title, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { http } from "@/lib/api/http";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { parseStudentRows, ParsedStudent } from "@/lib/excel/parseStudents";
@@ -1383,12 +1365,8 @@ export default function ImportPage() {
     if (!yearId || !classId) { notifications.show({ color: "red", message: "Pilih tahun ajaran dan kelas" }); return; }
     setSaving(true);
     try {
-      const res = await fetch("/api/students/import", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ academicYearId: yearId, classId, students: parsed }),
-      });
-      if (!res.ok) throw new Error();
-      const { created, updated } = await res.json();
+      const res = await http.post("/api/students/import", { academicYearId: yearId, classId, students: parsed });
+      const { created, updated } = res.data;
       notifications.show({ color: "green", message: `Berhasil: ${created} baru, ${updated} diperbarui` });
       setParsed([]);
     } catch {
@@ -1761,20 +1739,15 @@ Create `lib/hooks/useInternships.ts`:
 ```ts
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Internship } from "@/lib/types";
-
-async function jsonFetch(url: string, init?: RequestInit) {
-  const res = await fetch(url, init);
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
-}
+import { http, getJson } from "@/lib/api/http";
 
 export function useInternships(academicYearId?: string) {
   const qc = useQueryClient();
   const url = academicYearId ? `/api/internships?academicYearId=${academicYearId}` : "/api/internships";
-  const data = useQuery<Internship[]>({ queryKey: ["internships", academicYearId ?? "all"], queryFn: () => jsonFetch(url) });
+  const data = useQuery<Internship[]>({ queryKey: ["internships", academicYearId ?? "all"], queryFn: () => getJson<Internship[]>(url) });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["internships"] });
-  const create = useMutation({ mutationFn: (b: Partial<Internship>) => jsonFetch("/api/internships", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(b) }), onSuccess: invalidate });
-  const remove = useMutation({ mutationFn: (id: string) => jsonFetch(`/api/internships/${id}`, { method: "DELETE" }), onSuccess: invalidate });
+  const create = useMutation({ mutationFn: (b: Partial<Internship>) => http.post("/api/internships", b).then((r) => r.data), onSuccess: invalidate });
+  const remove = useMutation({ mutationFn: (id: string) => http.delete(`/api/internships/${id}`).then((r) => r.data), onSuccess: invalidate });
   return { data, create, remove };
 }
 ```
@@ -1842,7 +1815,9 @@ Create `pages/grade/[token].tsx`:
 ```tsx
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import axios from "axios";
 import { Button, Card, Group, Select, Stack, Title, Text, Alert } from "@mantine/core";
+import { http } from "@/lib/api/http";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
 import type { NextPageWithLayout } from "@/pages/_app";
@@ -1865,27 +1840,27 @@ const GradePage: NextPageWithLayout = () => {
 
   useEffect(() => {
     if (!token) return;
-    fetch(`/api/grade/${token}`).then(async (r) => {
-      if (!r.ok) { setNotFound(true); return; }
-      const data = await r.json();
-      setInfo(data);
-      if (data.status === "graded") setDone(true);
-    });
+    http.get(`/api/grade/${token}`)
+      .then((r) => {
+        setInfo(r.data);
+        if (r.data.status === "graded") setDone(true);
+      })
+      .catch(() => setNotFound(true));
   }, [token]);
 
   async function submit() {
     if (CRITERIA.some((c) => !ratings[c.key])) { setError("Mohon isi semua kriteria"); return; }
     setSaving(true); setError("");
     try {
-      const res = await fetch(`/api/grade/${token}`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ratings }),
-      });
-      if (res.status === 409) { setError("Penilaian sudah dikirim sebelumnya"); setDone(true); return; }
-      if (!res.ok) throw new Error();
+      await http.post(`/api/grade/${token}`, { ratings });
       setDone(true);
-    } catch { setError("Gagal mengirim penilaian"); }
-    finally { setSaving(false); }
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 409) {
+        setError("Penilaian sudah dikirim sebelumnya"); setDone(true);
+      } else {
+        setError("Gagal mengirim penilaian");
+      }
+    } finally { setSaving(false); }
   }
 
   if (notFound) return <Alert color="red" maw={500} mx="auto" mt={80}>Link tidak valid.</Alert>;
