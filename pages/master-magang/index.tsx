@@ -1,8 +1,9 @@
 import * as XLSX from "xlsx";
-import { ActionIcon, Button, Group, Stack, Table, TextInput, Tooltip } from "@mantine/core";
-import { WhatsappLogo, DownloadSimple, WarningOctagon, Buildings } from "@phosphor-icons/react";
+import { ActionIcon, Button, Group, Stack, Table, TextInput, Tooltip, Modal } from "@mantine/core";
+import { WhatsappLogo, DownloadSimple, WarningOctagon, Buildings, PencilSimple } from "@phosphor-icons/react";
 import { StateView } from "@/components/StateView";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
 import { useCompanies } from "@/lib/hooks/useCompanies";
@@ -12,9 +13,10 @@ import { useWhatsappTemplate } from "@/lib/hooks/useWhatsappTemplate";
 import { fillTemplate } from "@/lib/contact/fillTemplate";
 import { FormModal } from "@/components/FormModal";
 import { companySchema } from "@/lib/validation/schemas";
+import { Company } from "@/lib/types";
 
 export default function MasterMagangPage() {
-  const { data, create, remove } = useCompanies();
+  const { data, create, update, remove } = useCompanies();
   const { data: waData } = useWhatsappTemplate();
   const companies = data.data ?? [];
   const template = waData.data?.template ?? "";
@@ -64,7 +66,12 @@ export default function MasterMagangPage() {
                       <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={waHref ?? undefined} target="_blank" rel="noopener noreferrer"><WhatsappLogo size={18} weight="fill" /></ActionIcon>
                     </Tooltip>
                   </Table.Td>
-                  <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button></Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <EditCompany company={c} onSave={(v) => update.mutate(v)} />
+                      <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button>
+                    </Group>
+                  </Table.Td>
                 </Table.Tr>
               );
             })}
@@ -72,5 +79,33 @@ export default function MasterMagangPage() {
         </Table>
       )}
     </Stack>
+  );
+}
+
+function EditCompany({ company, onSave }: { company: Company; onSave: (v: Company) => void }) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const form = useForm({
+    initialValues: { perusahaan: company.perusahaan, pic: company.pic, phone: company.phone, alamat: company.alamat },
+    validate: zodResolver(companySchema),
+  });
+  return (
+    <>
+      <Tooltip label="Ubah">
+        <ActionIcon variant="light" onClick={() => { form.setValues({ perusahaan: company.perusahaan, pic: company.pic, phone: company.phone, alamat: company.alamat }); open(); }}>
+          <PencilSimple size={16} />
+        </ActionIcon>
+      </Tooltip>
+      <Modal opened={opened} onClose={close} title="Ubah Perusahaan" centered>
+        <form onSubmit={form.onSubmit((v) => { onSave({ ...company, ...v }); close(); })}>
+          <Stack>
+            <TextInput label="Perusahaan" {...form.getInputProps("perusahaan")} />
+            <TextInput label="PIC" {...form.getInputProps("pic")} />
+            <TextInput label="No. Telepon" {...form.getInputProps("phone")} />
+            <TextInput label="Alamat" {...form.getInputProps("alamat")} />
+            <Button type="submit">Simpan</Button>
+          </Stack>
+        </form>
+      </Modal>
+    </>
   );
 }

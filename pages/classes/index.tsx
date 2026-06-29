@@ -1,15 +1,17 @@
 import { useState } from "react";
 import { z } from "zod";
-import { Button, Group, Select, Stack, Table, TextInput } from "@mantine/core";
+import { Button, Group, Select, Stack, Table, TextInput, Modal, ActionIcon, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { WarningOctagon, Chalkboard } from "@phosphor-icons/react";
+import { WarningOctagon, Chalkboard, PencilSimple } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/PageHeader";
 import { StateView } from "@/components/StateView";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 import { FormModal } from "@/components/FormModal";
+import { SchoolClass } from "@/lib/types";
 
 const classFormSchema = z.object({
   name: z.string().trim().min(1, "Nama kelas wajib diisi"),
@@ -22,7 +24,7 @@ export default function ClassesPage() {
   const yearsList = years.data.data ?? [];
   const activeYears = yearsList.filter((y) => y.isActive);
   useDefaultYear(activeYears, yearId, setYearId);
-  const { data, create, remove } = useClasses(yearId ?? undefined);
+  const { data, create, update, remove } = useClasses(yearId ?? undefined);
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
   const form = useForm({
     initialValues: { name: "", waliKelas: "" },
@@ -57,12 +59,43 @@ export default function ClassesPage() {
             {(data.data ?? []).map((c) => (
               <Table.Tr key={c.id}>
                 <Table.Td>{c.name}</Table.Td><Table.Td>{c.waliKelas}</Table.Td>
-                <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button></Table.Td>
+                <Table.Td>
+                  <Group gap="xs">
+                    <EditClass cls={c} onSave={(v) => update.mutate(v)} />
+                    <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button>
+                  </Group>
+                </Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>
         </Table>
       )}
     </Stack>
+  );
+}
+
+function EditClass({ cls, onSave }: { cls: SchoolClass; onSave: (v: SchoolClass) => void }) {
+  const [opened, { open, close }] = useDisclosure(false);
+  const form = useForm({
+    initialValues: { name: cls.name, waliKelas: cls.waliKelas },
+    validate: zodResolver(classFormSchema),
+  });
+  return (
+    <>
+      <Tooltip label="Ubah">
+        <ActionIcon variant="light" onClick={() => { form.setValues({ name: cls.name, waliKelas: cls.waliKelas }); open(); }}>
+          <PencilSimple size={16} />
+        </ActionIcon>
+      </Tooltip>
+      <Modal opened={opened} onClose={close} title="Ubah Kelas" centered>
+        <form onSubmit={form.onSubmit((v) => { onSave({ ...cls, ...v }); close(); })}>
+          <Stack>
+            <TextInput label="Nama Kelas" {...form.getInputProps("name")} />
+            <TextInput label="Wali Kelas" {...form.getInputProps("waliKelas")} />
+            <Button type="submit">Simpan</Button>
+          </Stack>
+        </form>
+      </Modal>
+    </>
   );
 }

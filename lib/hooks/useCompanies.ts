@@ -9,6 +9,7 @@ export function useCompanies() {
   const data = useQuery<Company[]>({ queryKey: KEY, queryFn: () => getJson<Company[]>("/api/companies") });
   const invalidate = () => qc.invalidateQueries({ queryKey: KEY });
   const create = useMutation({ mutationFn: (b: Partial<Company>) => http.post("/api/companies", b).then((r) => r.data), onSuccess: invalidate });
+  const update = useMutation({ mutationFn: (b: Company) => http.put(`/api/companies/${b.id}`, b).then((r) => r.data), onSuccess: invalidate });
   const remove = useMutation({ mutationFn: (id: string) => http.delete(`/api/companies/${id}`).then((r) => r.data), onSuccess: invalidate });
-  return { data, create, remove };
+  return { data, create, update, remove };
 }
