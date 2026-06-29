@@ -1,0 +1,33 @@
+import { useState } from "react";
+import { Button, Group, Table, TextInput, Switch, Title, Stack } from "@mantine/core";
+import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
+
+export default function AcademicYearsPage() {
+  const { data, create, remove } = useAcademicYears();
+  const [year, setYear] = useState("");
+  const [semester, setSemester] = useState("1 (Satu)");
+  const [isActive, setIsActive] = useState(false);
+
+  return (
+    <Stack>
+      <Title order={2}>Tahun Ajaran</Title>
+      <Group align="end">
+        <TextInput label="Tahun" placeholder="2025/2026" value={year} onChange={(e) => setYear(e.currentTarget.value)} />
+        <TextInput label="Semester" value={semester} onChange={(e) => setSemester(e.currentTarget.value)} />
+        <Switch label="Aktif" checked={isActive} onChange={(e) => setIsActive(e.currentTarget.checked)} />
+        <Button onClick={() => create.mutate({ year, semester, isActive })}>Tambah</Button>
+      </Group>
+      <Table>
+        <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Semester</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+        <Table.Tbody>
+          {(data.data ?? []).map((y) => (
+            <Table.Tr key={y.id}>
+              <Table.Td>{y.year}</Table.Td><Table.Td>{y.semester}</Table.Td><Table.Td>{y.isActive ? "Ya" : "Tidak"}</Table.Td>
+              <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(y.id)}>Hapus</Button></Table.Td>
+            </Table.Tr>
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Stack>
+  );
+}
