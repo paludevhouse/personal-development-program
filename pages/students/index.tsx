@@ -3,15 +3,18 @@ import { Button, Group, Select, Stack, Table, Title } from "@mantine/core";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
+import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 
 export default function StudentsPage() {
   const years = useAcademicYears();
   const [yearId, setYearId] = useState<string | null>(null);
+  const yearsList = years.data.data ?? [];
+  useDefaultYear(yearsList, yearId, setYearId);
   const classes = useClasses(yearId ?? undefined);
   const [classId, setClassId] = useState<string | null>(null);
   const { query } = useStudents({ academicYearId: yearId ?? undefined, classId: classId ?? undefined });
 
-  const yearOptions = (years.data.data ?? []).map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = yearsList.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
 
   return (

@@ -2,14 +2,17 @@ import { useState } from "react";
 import { Button, Group, Select, Stack, Table, TextInput, Title } from "@mantine/core";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
+import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 
 export default function ClassesPage() {
   const years = useAcademicYears();
   const [yearId, setYearId] = useState<string | null>(null);
+  const yearsList = years.data.data ?? [];
+  useDefaultYear(yearsList, yearId, setYearId);
   const { data, create, remove } = useClasses(yearId ?? undefined);
   const [name, setName] = useState("");
   const [wali, setWali] = useState("");
-  const yearOptions = (years.data.data ?? []).map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = yearsList.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
 
   return (
     <Stack>

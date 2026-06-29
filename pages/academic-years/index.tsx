@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Button, Group, Table, TextInput, Switch, Title, Stack } from "@mantine/core";
+import { Button, Group, Table, TextInput, Select, Switch, Title, Stack } from "@mantine/core";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
+
+const SEMESTER_OPTIONS = ["1 (Satu)", "2 (Dua)"];
 
 export default function AcademicYearsPage() {
   const { data, create, remove } = useAcademicYears();
@@ -13,7 +15,7 @@ export default function AcademicYearsPage() {
       <Title order={2}>Tahun Ajaran</Title>
       <Group align="end">
         <TextInput label="Tahun" placeholder="2025/2026" value={year} onChange={(e) => setYear(e.currentTarget.value)} />
-        <TextInput label="Semester" value={semester} onChange={(e) => setSemester(e.currentTarget.value)} />
+        <Select label="Semester" data={SEMESTER_OPTIONS} value={semester} onChange={(v) => setSemester(v ?? "1 (Satu)")} allowDeselect={false} />
         <Switch label="Aktif" checked={isActive} onChange={(e) => setIsActive(e.currentTarget.checked)} />
         <Button onClick={() => create.mutate({ year, semester, isActive })}>Tambah</Button>
       </Group>
