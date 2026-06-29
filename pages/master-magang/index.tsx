@@ -1,6 +1,7 @@
-import { useState } from "react";
 import * as XLSX from "xlsx";
 import { ActionIcon, Button, Group, Stack, Table, TextInput, Tooltip } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
 import { useCompanies } from "@/lib/hooks/useCompanies";
 import { buildCompaniesWorkbook } from "@/lib/excel/exportCompanies";
@@ -8,23 +9,17 @@ import { waLink } from "@/lib/contact/waLink";
 import { useWhatsappTemplate } from "@/lib/hooks/useWhatsappTemplate";
 import { fillTemplate } from "@/lib/contact/fillTemplate";
 import { FormModal } from "@/components/FormModal";
+import { companySchema } from "@/lib/validation/schemas";
 
 export default function MasterMagangPage() {
   const { data, create, remove } = useCompanies();
   const { data: waData } = useWhatsappTemplate();
-  const [perusahaan, setPerusahaan] = useState("");
-  const [pic, setPic] = useState("");
-  const [phone, setPhone] = useState("");
-  const [alamat, setAlamat] = useState("");
   const companies = data.data ?? [];
   const template = waData.data?.template ?? "";
-
-  function add(close: () => void) {
-    if (!perusahaan) return;
-    create.mutate({ perusahaan, pic, phone, alamat });
-    setPerusahaan(""); setPic(""); setPhone(""); setAlamat("");
-    close();
-  }
+  const form = useForm({
+    initialValues: { perusahaan: "", pic: "", phone: "", alamat: "" },
+    validate: zodResolver(companySchema),
+  });
 
   return (
     <Stack>
@@ -35,13 +30,15 @@ export default function MasterMagangPage() {
       <Group align="end">
         <FormModal title="Tambah Perusahaan">
           {(close) => (
-            <Stack>
-              <TextInput label="Perusahaan" value={perusahaan} onChange={(e) => setPerusahaan(e.currentTarget.value)} />
-              <TextInput label="PIC" value={pic} onChange={(e) => setPic(e.currentTarget.value)} />
-              <TextInput label="No. Telepon" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
-              <TextInput label="Alamat" value={alamat} onChange={(e) => setAlamat(e.currentTarget.value)} />
-              <Button disabled={!perusahaan} onClick={() => add(close)}>Simpan</Button>
-            </Stack>
+            <form onSubmit={form.onSubmit((values) => { create.mutate(values); form.reset(); close(); })}>
+              <Stack>
+                <TextInput label="Perusahaan" {...form.getInputProps("perusahaan")} />
+                <TextInput label="PIC" {...form.getInputProps("pic")} />
+                <TextInput label="No. Telepon" {...form.getInputProps("phone")} />
+                <TextInput label="Alamat" {...form.getInputProps("alamat")} />
+                <Button type="submit">Simpan</Button>
+              </Stack>
+            </form>
           )}
         </FormModal>
       </Group>

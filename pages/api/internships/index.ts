@@ -1,7 +1,8 @@
-import { methods } from "@/lib/api/respond";
+import { methods, ApiError } from "@/lib/api/respond";
 import { repo } from "@/lib/db/repo";
 import { requireAdmin } from "@/lib/auth/session";
 import { newToken } from "@/lib/internship/token";
+import { internshipSchema, parseOrThrow } from "@/lib/validation/schemas";
 
 const EMPTY_RATINGS = {
   kedisiplinan: null, kerjasama: null, inisiatif: null, tanggungJawab: null,
@@ -16,10 +17,12 @@ export default methods({
   },
   POST: async (req) => {
     await requireAdmin(req);
+    let input;
+    try { input = parseOrThrow(internshipSchema, req.body ?? {}); }
+    catch (e) { throw new ApiError(400, (e as Error).message); }
     const b = req.body ?? {};
     return repo.create("internships", {
-      studentId: b.studentId, academicYearId: b.academicYearId,
-      lokasiMagang: b.lokasiMagang ?? "", posisi: b.posisi ?? "", pembimbing: b.pembimbing ?? "",
+      ...input,
       token: newToken(), status: "pending",
       ratings: EMPTY_RATINGS, nilaiAkhir: null, kategori: null, tanggal: b.tanggal ?? "",
     });

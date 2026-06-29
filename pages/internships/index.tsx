@@ -1,11 +1,20 @@
 import { useState } from "react";
+import { z } from "zod";
 import { Button, CopyButton, Group, Select, Stack, Table, TextInput, Badge } from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
 import { useInternships } from "@/lib/hooks/useInternships";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 import { FormModal } from "@/components/FormModal";
+
+const internshipFormSchema = z.object({
+  lokasiMagang: z.string().trim().default(""),
+  posisi: z.string().trim().default(""),
+  pembimbing: z.string().trim().default(""),
+});
 
 export default function InternshipsPage() {
   const years = useAcademicYears();
@@ -15,7 +24,10 @@ export default function InternshipsPage() {
   const { data, create, remove } = useInternships(yearId ?? undefined);
   const studentsHook = useStudents({ academicYearId: yearId ?? undefined });
   const [studentId, setStudentId] = useState<string | null>(null);
-  const [lokasi, setLokasi] = useState(""); const [posisi, setPosisi] = useState(""); const [pembimbing, setPembimbing] = useState("");
+  const form = useForm({
+    initialValues: { lokasiMagang: "", posisi: "", pembimbing: "" },
+    validate: zodResolver(internshipFormSchema),
+  });
 
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
   const studentOptions = (studentsHook.query.data ?? []).map((s) => ({ value: s.id, label: s.namaSiswa }));
@@ -29,13 +41,15 @@ export default function InternshipsPage() {
         <Button variant="light" onClick={() => studentsHook.query.refetch()}>Muat Siswa</Button>
         <FormModal title="Tambah Penempatan" buttonLabel="Tambah Penempatan">
           {(close) => (
-            <Stack>
-              <Select label="Siswa" data={studentOptions} value={studentId} onChange={setStudentId} searchable />
-              <TextInput label="Lokasi Magang" value={lokasi} onChange={(e) => setLokasi(e.currentTarget.value)} />
-              <TextInput label="Posisi" value={posisi} onChange={(e) => setPosisi(e.currentTarget.value)} />
-              <TextInput label="Pembimbing" value={pembimbing} onChange={(e) => setPembimbing(e.currentTarget.value)} />
-              <Button disabled={!yearId || !studentId} onClick={() => { create.mutate({ academicYearId: yearId!, studentId: studentId!, lokasiMagang: lokasi, posisi, pembimbing }); setLokasi(""); setPosisi(""); setPembimbing(""); setStudentId(null); close(); }}>Simpan</Button>
-            </Stack>
+            <form onSubmit={form.onSubmit((values) => { create.mutate({ academicYearId: yearId!, studentId: studentId!, lokasiMagang: values.lokasiMagang, posisi: values.posisi, pembimbing: values.pembimbing }); form.reset(); setStudentId(null); close(); })}>
+              <Stack>
+                <Select label="Siswa" data={studentOptions} value={studentId} onChange={setStudentId} searchable />
+                <TextInput label="Lokasi Magang" {...form.getInputProps("lokasiMagang")} />
+                <TextInput label="Posisi" {...form.getInputProps("posisi")} />
+                <TextInput label="Pembimbing" {...form.getInputProps("pembimbing")} />
+                <Button type="submit" disabled={!yearId || !studentId}>Simpan</Button>
+              </Stack>
+            </form>
           )}
         </FormModal>
       </Group>

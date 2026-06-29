@@ -1,6 +1,7 @@
-import { methods } from "@/lib/api/respond";
+import { methods, ApiError } from "@/lib/api/respond";
 import { repo } from "@/lib/db/repo";
 import { requireAdmin } from "@/lib/auth/session";
+import { companySchema, parseOrThrow } from "@/lib/validation/schemas";
 
 export default methods({
   GET: async (req) => {
@@ -9,7 +10,9 @@ export default methods({
   },
   POST: async (req) => {
     await requireAdmin(req);
-    const b = req.body ?? {};
-    return repo.create("companies", { perusahaan: b.perusahaan ?? "", pic: b.pic ?? "", phone: b.phone ?? "", alamat: b.alamat ?? "" });
+    let input;
+    try { input = parseOrThrow(companySchema, req.body ?? {}); }
+    catch (e) { throw new ApiError(400, (e as Error).message); }
+    return repo.create("companies", { ...input });
   },
 });
