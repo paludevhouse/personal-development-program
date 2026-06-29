@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { z } from "zod";
 import { Button, CopyButton, Group, Select, Stack, Table, TextInput, Badge } from "@mantine/core";
-import { Users, LinkSimple } from "@phosphor-icons/react";
+import { Users, LinkSimple, WarningOctagon, Briefcase } from "@phosphor-icons/react";
+import { StateView } from "@/components/StateView";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
@@ -54,24 +55,30 @@ export default function InternshipsPage() {
           )}
         </FormModal>
       </Group>
-      <Table>
-        <Table.Thead><Table.Tr><Table.Th>Lokasi</Table.Th><Table.Th>Posisi</Table.Th><Table.Th>Status</Table.Th><Table.Th>Nilai</Table.Th><Table.Th>Kategori</Table.Th><Table.Th>Link PIC</Table.Th><Table.Th /></Table.Tr></Table.Thead>
-        <Table.Tbody>
-          {(data.data ?? []).map((it) => {
-            const link = `${origin}/grade/${it.token}`;
-            return (
-              <Table.Tr key={it.id}>
-                <Table.Td>{it.lokasiMagang}</Table.Td><Table.Td>{it.posisi}</Table.Td>
-                <Table.Td><Badge color={it.status === "graded" ? "green" : "gray"}>{it.status === "graded" ? "Dinilai" : "Menunggu"}</Badge></Table.Td>
-                <Table.Td>{it.nilaiAkhir != null ? it.nilaiAkhir.toFixed(2) : "-"}</Table.Td>
-                <Table.Td>{it.kategori ?? "-"}</Table.Td>
-                <Table.Td><CopyButton value={link}>{({ copied, copy }) => <Button size="xs" variant="light" onClick={copy} leftSection={<LinkSimple size={14} weight="bold" />}>{copied ? "Tersalin" : "Salin Link"}</Button>}</CopyButton></Table.Td>
-                <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(it.id)}>Hapus</Button></Table.Td>
-              </Table.Tr>
-            );
-          })}
-        </Table.Tbody>
-      </Table>
+      {data.isError ? (
+        <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data. Muat ulang halaman." />
+      ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
+        <StateView icon={<Briefcase size={44} weight="duotone" />} title="Belum ada data" description="Pilih tahun ajaran lalu tambah penempatan magang." />
+      ) : (
+        <Table>
+          <Table.Thead><Table.Tr><Table.Th>Lokasi</Table.Th><Table.Th>Posisi</Table.Th><Table.Th>Status</Table.Th><Table.Th>Nilai</Table.Th><Table.Th>Kategori</Table.Th><Table.Th>Link PIC</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+          <Table.Tbody>
+            {(data.data ?? []).map((it) => {
+              const link = `${origin}/grade/${it.token}`;
+              return (
+                <Table.Tr key={it.id}>
+                  <Table.Td>{it.lokasiMagang}</Table.Td><Table.Td>{it.posisi}</Table.Td>
+                  <Table.Td><Badge color={it.status === "graded" ? "green" : "gray"}>{it.status === "graded" ? "Dinilai" : "Menunggu"}</Badge></Table.Td>
+                  <Table.Td>{it.nilaiAkhir != null ? it.nilaiAkhir.toFixed(2) : "-"}</Table.Td>
+                  <Table.Td>{it.kategori ?? "-"}</Table.Td>
+                  <Table.Td><CopyButton value={link}>{({ copied, copy }) => <Button size="xs" variant="light" onClick={copy} leftSection={<LinkSimple size={14} weight="bold" />}>{copied ? "Tersalin" : "Salin Link"}</Button>}</CopyButton></Table.Td>
+                  <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(it.id)}>Hapus</Button></Table.Td>
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      )}
     </Stack>
   );
 }

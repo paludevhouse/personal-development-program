@@ -3,7 +3,9 @@ import { z } from "zod";
 import { Button, Group, Select, Stack, Table, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
+import { WarningOctagon, Chalkboard } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/PageHeader";
+import { StateView } from "@/components/StateView";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
@@ -44,17 +46,23 @@ export default function ClassesPage() {
           )}
         </FormModal>
       </Group>
-      <Table>
-        <Table.Thead><Table.Tr><Table.Th>Kelas</Table.Th><Table.Th>Wali Kelas</Table.Th><Table.Th /></Table.Tr></Table.Thead>
-        <Table.Tbody>
-          {(data.data ?? []).map((c) => (
-            <Table.Tr key={c.id}>
-              <Table.Td>{c.name}</Table.Td><Table.Td>{c.waliKelas}</Table.Td>
-              <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button></Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+      {data.isError ? (
+        <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data. Muat ulang halaman." />
+      ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
+        <StateView icon={<Chalkboard size={44} weight="duotone" />} title="Belum ada data" description="Tambah kelas untuk tahun ajaran terpilih." />
+      ) : (
+        <Table>
+          <Table.Thead><Table.Tr><Table.Th>Kelas</Table.Th><Table.Th>Wali Kelas</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+          <Table.Tbody>
+            {(data.data ?? []).map((c) => (
+              <Table.Tr key={c.id}>
+                <Table.Td>{c.name}</Table.Td><Table.Td>{c.waliKelas}</Table.Td>
+                <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button></Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
     </Stack>
   );
 }

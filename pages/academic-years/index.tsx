@@ -1,4 +1,6 @@
 import { Button, Group, Table, TextInput, Select, Switch, Stack } from "@mantine/core";
+import { WarningOctagon, CalendarBlank } from "@phosphor-icons/react";
+import { StateView } from "@/components/StateView";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
@@ -32,17 +34,23 @@ export default function AcademicYearsPage() {
           )}
         </FormModal>
       </Group>
-      <Table>
-        <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Semester</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
-        <Table.Tbody>
-          {(data.data ?? []).map((y) => (
-            <Table.Tr key={y.id}>
-              <Table.Td>{y.year}</Table.Td><Table.Td>{y.semester}</Table.Td><Table.Td>{y.isActive ? "Ya" : "Tidak"}</Table.Td>
-              <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(y.id)}>Hapus</Button></Table.Td>
-            </Table.Tr>
-          ))}
-        </Table.Tbody>
-      </Table>
+      {data.isError ? (
+        <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data. Muat ulang halaman." />
+      ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
+        <StateView icon={<CalendarBlank size={44} weight="duotone" />} title="Belum ada data" description="Tambah tahun ajaran untuk memulai." />
+      ) : (
+        <Table>
+          <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Semester</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+          <Table.Tbody>
+            {(data.data ?? []).map((y) => (
+              <Table.Tr key={y.id}>
+                <Table.Td>{y.year}</Table.Td><Table.Td>{y.semester}</Table.Td><Table.Td>{y.isActive ? "Ya" : "Tidak"}</Table.Td>
+                <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(y.id)}>Hapus</Button></Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
     </Stack>
   );
 }
