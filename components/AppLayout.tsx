@@ -11,6 +11,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <NavLink component={Link} href="/classes" label="Kelas" />
         <NavLink component={Link} href="/academic-years" label="Tahun Ajaran" />
         <NavLink component={Link} href="/internships" label="Magang" />
+        <NavLink component={Link} href="/master-magang" label="Master Magang" />
       </AppShell.Navbar>
       <AppShell.Main>{children}</AppShell.Main>
     </AppShell>

@@ -1,5 +1,7 @@
 export type Gender = "L" | "P";
 
+export interface Company { id: string; perusahaan: string; pic: string; phone: string; alamat: string; }
+
 export interface AcademicYear { id: string; year: string; semester: string; isActive: boolean; }
 export interface SchoolClass { id: string; name: string; academicYearId: string; waliKelas: string; }
 export interface Student { id: string; namaSiswa: string; namaBesar: string; namaPendek: string; nis: string; nisn: string; gender: Gender; }
