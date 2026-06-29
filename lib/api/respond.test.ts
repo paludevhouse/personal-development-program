@@ -4,7 +4,9 @@ import { methods, ApiError } from "./respond";
 
 function mockRes() {
   const res = { headersSent: false, statusCode: 200 } as unknown as NextApiResponse & { body?: unknown };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   res.status = vi.fn((c: number) => { (res as any).statusCode = c; return res; }) as any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   res.json = vi.fn((b: unknown) => { (res as any).body = b; (res as any).headersSent = true; return res; }) as any;
   return res as NextApiResponse & { statusCode: number; body?: unknown };
 }
@@ -37,6 +39,7 @@ describe("methods", () => {
     const res = mockRes();
     await methods({ GET: async (_r, r) => { r.status(204).json({ done: true }); } })(req("GET"), res);
     expect(res.body).toEqual({ done: true });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     expect((res.status as any).mock.calls.length).toBe(1);
   });
 });
