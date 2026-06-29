@@ -4,15 +4,19 @@ import { ActionIcon, Button, Group, Stack, Table, TextInput, Title, Tooltip } fr
 import { useCompanies } from "@/lib/hooks/useCompanies";
 import { buildCompaniesWorkbook } from "@/lib/excel/exportCompanies";
 import { waLink } from "@/lib/contact/waLink";
+import { useWhatsappTemplate } from "@/lib/hooks/useWhatsappTemplate";
+import { fillTemplate } from "@/lib/contact/fillTemplate";
 import { FormModal } from "@/components/FormModal";
 
 export default function MasterMagangPage() {
   const { data, create, remove } = useCompanies();
+  const { data: waData } = useWhatsappTemplate();
   const [perusahaan, setPerusahaan] = useState("");
   const [pic, setPic] = useState("");
   const [phone, setPhone] = useState("");
   const [alamat, setAlamat] = useState("");
   const companies = data.data ?? [];
+  const template = waData.data?.template ?? "";
 
   function add(close: () => void) {
     if (!perusahaan) return;
@@ -45,12 +49,14 @@ export default function MasterMagangPage() {
         <Table.Tbody>
           {companies.map((c) => {
             const wa = waLink(c.phone);
+            const text = encodeURIComponent(fillTemplate(template, { pic: c.pic, perusahaan: c.perusahaan }));
+            const waHref = wa ? `${wa}?text=${text}` : undefined;
             return (
               <Table.Tr key={c.id}>
                 <Table.Td>{c.perusahaan}</Table.Td><Table.Td>{c.pic}</Table.Td><Table.Td>{c.phone}</Table.Td><Table.Td>{c.alamat}</Table.Td>
                 <Table.Td>
                   <Tooltip label={wa ? "Chat WhatsApp" : "Nomor tidak valid"}>
-                    <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={wa ?? undefined} target="_blank" rel="noopener noreferrer">WA</ActionIcon>
+                    <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={waHref ?? undefined} target="_blank" rel="noopener noreferrer">WA</ActionIcon>
                   </Tooltip>
                 </Table.Td>
                 <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button></Table.Td>
