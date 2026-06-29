@@ -1927,3 +1927,275 @@ git add -A && git commit -m "feat: internships admin UI + public PIC grading for
 **Type consistency:** `Student`, `AcademicYear`, `SchoolClass`, `Internship`, `InternshipRatings`, `Rating`, `Gender`, `ParsedStudent`, `NextPageWithLayout` defined once and reused; `CRITERIA` keys match `InternshipRatings` keys; `methods`/`ApiError`/`requireAdmin`/`repo`/`computeGrade`/`newToken` signatures consistent across consumers. ✓
 
 **Note for executor:** Firestore may prompt for a composite index on the multi-field `enrollments` query (`classId` + `academicYearId`) used by the import route — create it via the link Firestore logs. `.env.local` already holds real credentials; never overwrite or commit it.
+
+---
+
+### Task 13: Master Magang — company master data + WhatsApp + Excel export
+
+**Files:**
+- Modify: `lib/types.ts` (add `Company`)
+- Create: `lib/contact/waLink.ts`, test `lib/contact/waLink.test.ts`
+- Create: `lib/excel/exportCompanies.ts`, test `lib/excel/exportCompanies.test.ts`
+- Create: `pages/api/companies/index.ts`, `pages/api/companies/[id].ts`
+- Create: `lib/hooks/useCompanies.ts`
+- Create: `pages/master-magang/index.tsx`
+- Modify: `components/AppLayout.tsx` (add nav link)
+
+**Interfaces:**
+- Consumes: `methods`, `requireAdmin`, `repo`, `http`/`getJson`, `xlsx`.
+- Produces:
+  - `Company = { id, perusahaan, pic, phone, alamat }`.
+  - `waLink(phone): string | null` — Indonesian phone → `https://wa.me/<digits>` (or null if no digits).
+  - `buildCompaniesWorkbook(companies): WorkBook`.
+  - REST `/api/companies` (GET/POST) + `/api/companies/[id]` (PUT/DELETE), admin-guarded.
+  - Hook `useCompanies()` → `{ data, create, remove }`.
+  - Page `/master-magang`.
+
+- [ ] **Step 1: Add the Company type**
+
+In `lib/types.ts` add:
+```ts
+export interface Company { id: string; perusahaan: string; pic: string; phone: string; alamat: string; }
+```
+
+- [ ] **Step 2: Write waLink tests**
+
+Create `lib/contact/waLink.test.ts`:
+```ts
+import { describe, it, expect } from "vitest";
+import { waLink } from "./waLink";
+
+describe("waLink", () => {
+  it("converts a leading-0 Indonesian number to 62", () => {
+    expect(waLink("081234567890")).toBe("https://wa.me/6281234567890");
+  });
+  it("strips spaces, dashes and + and keeps 62 prefix", () => {
+    expect(waLink("+62 812-3456-7890")).toBe("https://wa.me/6281234567890");
+  });
+  it("keeps an already-62 number", () => {
+    expect(waLink("6281234567890")).toBe("https://wa.me/6281234567890");
+  });
+  it("prepends 62 to a bare 8-number", () => {
+    expect(waLink("8123456789")).toBe("https://wa.me/628123456789");
+  });
+  it("returns null when there are no digits", () => {
+    expect(waLink("")).toBeNull();
+    expect(waLink("-")).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 3: Run test (RED)**
+
+Run: `npm test -- waLink.test.ts`
+Expected: FAIL (module not found).
+
+- [ ] **Step 4: Implement waLink**
+
+Create `lib/contact/waLink.ts`:
+```ts
+/** Normalize an Indonesian phone number to a wa.me chat URL, or null if it has no digits. */
+export function waLink(phone: string): string | null {
+  const digits = (phone ?? "").replace(/\D/g, "");
+  if (!digits) return null;
+  let normalized = digits;
+  if (normalized.startsWith("0")) normalized = "62" + normalized.slice(1);
+  else if (!normalized.startsWith("62")) normalized = "62" + normalized;
+  return `https://wa.me/${normalized}`;
+}
+```
+
+- [ ] **Step 5: Run test (GREEN)**
+
+Run: `npm test -- waLink.test.ts`
+Expected: PASS (5 cases).
+
+- [ ] **Step 6: Write exportCompanies test**
+
+Create `lib/excel/exportCompanies.test.ts`:
+```ts
+import { describe, it, expect } from "vitest";
+import * as XLSX from "xlsx";
+import { buildCompaniesWorkbook } from "./exportCompanies";
+import { Company } from "@/lib/types";
+
+const c: Company = { id: "1", perusahaan: "T4U Graha Famili", pic: "Wenly", phone: "081234567890", alamat: "Surabaya" };
+
+describe("buildCompaniesWorkbook", () => {
+  it("round-trips company fields under Indonesian headers", () => {
+    const wb = buildCompaniesWorkbook([c]);
+    const rows = XLSX.utils.sheet_to_json<Record<string, string>>(wb.Sheets[wb.SheetNames[0]]);
+    expect(rows[0]["Perusahaan"]).toBe("T4U Graha Famili");
+    expect(rows[0]["PIC"]).toBe("Wenly");
+    expect(rows[0]["No. Telepon"]).toBe("081234567890");
+    expect(rows[0]["Alamat"]).toBe("Surabaya");
+  });
+});
+```
+
+- [ ] **Step 7: Run test (RED)**
+
+Run: `npm test -- exportCompanies.test.ts`
+Expected: FAIL.
+
+- [ ] **Step 8: Implement buildCompaniesWorkbook**
+
+Create `lib/excel/exportCompanies.ts`:
+```ts
+import * as XLSX from "xlsx";
+import { Company } from "@/lib/types";
+
+export function buildCompaniesWorkbook(companies: Company[]): XLSX.WorkBook {
+  const rows = companies.map((c) => ({
+    "Perusahaan": c.perusahaan, "PIC": c.pic, "No. Telepon": c.phone, "Alamat": c.alamat,
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Master Magang");
+  return wb;
+}
+```
+
+- [ ] **Step 9: Run test (GREEN)**
+
+Run: `npm test -- exportCompanies.test.ts`
+Expected: PASS.
+
+- [ ] **Step 10: API routes**
+
+Create `pages/api/companies/index.ts`:
+```ts
+import { methods } from "@/lib/api/respond";
+import { repo } from "@/lib/db/repo";
+import { requireAdmin } from "@/lib/auth/session";
+
+export default methods({
+  GET: async (req) => {
+    await requireAdmin(req);
+    return repo.list("companies");
+  },
+  POST: async (req) => {
+    await requireAdmin(req);
+    const b = req.body ?? {};
+    return repo.create("companies", { perusahaan: b.perusahaan ?? "", pic: b.pic ?? "", phone: b.phone ?? "", alamat: b.alamat ?? "" });
+  },
+});
+```
+
+Create `pages/api/companies/[id].ts`:
+```ts
+import { methods } from "@/lib/api/respond";
+import { repo } from "@/lib/db/repo";
+import { requireAdmin } from "@/lib/auth/session";
+
+export default methods({
+  PUT: async (req) => {
+    await requireAdmin(req);
+    const b = req.body ?? {};
+    return repo.update("companies", req.query.id as string, { perusahaan: b.perusahaan, pic: b.pic, phone: b.phone, alamat: b.alamat });
+  },
+  DELETE: async (req) => {
+    await requireAdmin(req);
+    return repo.remove("companies", req.query.id as string);
+  },
+});
+```
+
+- [ ] **Step 11: Hook**
+
+Create `lib/hooks/useCompanies.ts`:
+```ts
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Company } from "@/lib/types";
+import { http, getJson } from "@/lib/api/http";
+
+const KEY = ["companies"];
+
+export function useCompanies() {
+  const qc = useQueryClient();
+  const data = useQuery<Company[]>({ queryKey: KEY, queryFn: () => getJson<Company[]>("/api/companies") });
+  const invalidate = () => qc.invalidateQueries({ queryKey: KEY });
+  const create = useMutation({ mutationFn: (b: Partial<Company>) => http.post("/api/companies", b).then((r) => r.data), onSuccess: invalidate });
+  const remove = useMutation({ mutationFn: (id: string) => http.delete(`/api/companies/${id}`).then((r) => r.data), onSuccess: invalidate });
+  return { data, create, remove };
+}
+```
+
+- [ ] **Step 12: Page**
+
+Create `pages/master-magang/index.tsx`:
+```tsx
+import { useState } from "react";
+import * as XLSX from "xlsx";
+import { ActionIcon, Button, Group, Stack, Table, TextInput, Title, Tooltip } from "@mantine/core";
+import { useCompanies } from "@/lib/hooks/useCompanies";
+import { buildCompaniesWorkbook } from "@/lib/excel/exportCompanies";
+import { waLink } from "@/lib/contact/waLink";
+
+export default function MasterMagangPage() {
+  const { data, create, remove } = useCompanies();
+  const [perusahaan, setPerusahaan] = useState("");
+  const [pic, setPic] = useState("");
+  const [phone, setPhone] = useState("");
+  const [alamat, setAlamat] = useState("");
+  const companies = data.data ?? [];
+
+  function add() {
+    if (!perusahaan) return;
+    create.mutate({ perusahaan, pic, phone, alamat });
+    setPerusahaan(""); setPic(""); setPhone(""); setAlamat("");
+  }
+
+  return (
+    <Stack>
+      <Title order={2}>Master Magang</Title>
+      <Group>
+        <Button variant="light" disabled={!companies.length} onClick={() => XLSX.writeFile(buildCompaniesWorkbook(companies), "master-magang.xlsx")}>Ekspor Excel</Button>
+      </Group>
+      <Group align="end">
+        <TextInput label="Perusahaan" value={perusahaan} onChange={(e) => setPerusahaan(e.currentTarget.value)} />
+        <TextInput label="PIC" value={pic} onChange={(e) => setPic(e.currentTarget.value)} />
+        <TextInput label="No. Telepon" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
+        <TextInput label="Alamat" value={alamat} onChange={(e) => setAlamat(e.currentTarget.value)} />
+        <Button disabled={!perusahaan} onClick={add}>Tambah</Button>
+      </Group>
+      <Table>
+        <Table.Thead><Table.Tr><Table.Th>Perusahaan</Table.Th><Table.Th>PIC</Table.Th><Table.Th>No. Telepon</Table.Th><Table.Th>Alamat</Table.Th><Table.Th>WhatsApp</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+        <Table.Tbody>
+          {companies.map((c) => {
+            const wa = waLink(c.phone);
+            return (
+              <Table.Tr key={c.id}>
+                <Table.Td>{c.perusahaan}</Table.Td><Table.Td>{c.pic}</Table.Td><Table.Td>{c.phone}</Table.Td><Table.Td>{c.alamat}</Table.Td>
+                <Table.Td>
+                  <Tooltip label={wa ? "Chat WhatsApp" : "Nomor tidak valid"}>
+                    <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={wa ?? undefined} target="_blank" rel="noopener noreferrer">WA</ActionIcon>
+                  </Tooltip>
+                </Table.Td>
+                <Table.Td><Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button></Table.Td>
+              </Table.Tr>
+            );
+          })}
+        </Table.Tbody>
+      </Table>
+    </Stack>
+  );
+}
+```
+
+- [ ] **Step 13: Nav link**
+
+In `components/AppLayout.tsx` add, after the Magang NavLink:
+```tsx
+<NavLink component={Link} href="/master-magang" label="Master Magang" />
+```
+
+- [ ] **Step 14: Full suite + build**
+
+Run: `npm test` (waLink + exportCompanies pass; suite green) and `npm run build` (typechecks routes/hook/page).
+
+- [ ] **Step 15: Commit**
+
+```bash
+git add -A && git commit -m "feat: Master Magang company master + WhatsApp link + Excel export"
+```
