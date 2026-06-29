@@ -19,10 +19,10 @@ export default methods({
 
     let created = 0, updated = 0;
     for (const s of list) {
-      let id = s.nisn ? byNisn.get(String(s.nisn)) : undefined;
+      let id: string | undefined = s.nisn ? byNisn.get(String(s.nisn)) : undefined;
       if (id) { await repo.update("students", id, { ...s }); updated++; }
-      else { const r = await repo.create("students", { ...s }); id = r.id; created++; }
-      if (!enrolledStudentIds.has(id)) {
+      else { const r = await repo.create("students", { ...s }); id = r.id as string; created++; }
+      if (id && !enrolledStudentIds.has(id)) {
         await repo.create("enrollments", { studentId: id, classId, academicYearId });
         enrolledStudentIds.add(id);
       }
