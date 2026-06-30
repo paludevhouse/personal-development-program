@@ -1,7 +1,7 @@
 // Seed Firestore from the Master Magang xlsx so the app has real test data.
 // Run with credentials loaded from .env.local:
 //   node --env-file=.env.local scripts/seed.mjs ["/path/to/Master Magang.xlsx"]
-// Idempotent: re-running won't duplicate (matches academic year by year+semester,
+// Idempotent: re-running won't duplicate (matches academic year by year,
 // class by name+year, student by NISN, internship by studentId+year).
 
 import { getApps, initializeApp, cert } from "firebase-admin/app";
@@ -39,12 +39,11 @@ async function main() {
 
   // 1) Academic year (active)
   const year = str(rows[0]["Tahun Ajaran"]) || "2025/2026";
-  const semester = str(rows[0]["Semester"]) || "1 (Satu)";
   let ay = await findOne("academicYears", "year", year);
   if (!ay) {
-    const ref = await db.collection("academicYears").add({ year, semester, isActive: true });
+    const ref = await db.collection("academicYears").add({ year, isActive: true });
     ay = { id: ref.id };
-    console.log(`+ academicYear ${year} ${semester}`);
+    console.log(`+ academicYear ${year}`);
   } else {
     console.log(`= academicYear ${year} exists`);
   }

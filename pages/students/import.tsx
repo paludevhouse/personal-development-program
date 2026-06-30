@@ -57,7 +57,7 @@ export default function ImportPage() {
   }
 
   const activeYears = (years.data?.data ?? []).filter((y) => y.isActive);
-  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const classOptions = (classes.data?.data ?? []).map((c) => ({ value: c.id, label: c.name }));
 
   function handleDownloadTemplate() {

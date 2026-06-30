@@ -33,7 +33,6 @@ async function seed() {
   // 1. Create Academic Year
   const yearDoc = await repo.create("academicYears", {
     year: "2026/2027",
-    semester: "1 (Satu)",
     isActive: true,
   });
   const yearId = yearDoc.id as string;

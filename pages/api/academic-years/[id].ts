@@ -7,7 +7,7 @@ export default methods({
     await requireAdmin(req);
     const id = req.query.id as string;
     const b = req.body ?? {};
-    return repo.update("academicYears", id, { year: b.year, semester: b.semester, isActive: !!b.isActive });
+    return repo.update("academicYears", id, { year: b.year, isActive: !!b.isActive });
   },
   DELETE: async (req) => {
     await requireAdmin(req);

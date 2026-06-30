@@ -7,7 +7,6 @@ function requiredStr(msg: string) {
 
 export const academicYearSchema = z.object({
   year: requiredStr("Tahun wajib diisi"),
-  semester: requiredStr("Semester wajib diisi"),
   isActive: z.boolean().default(false),
 });
 

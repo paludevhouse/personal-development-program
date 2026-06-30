@@ -61,7 +61,7 @@ export default function ImportInternshipsPage() {
   const [selectedFields, setSelectedFields] = useState<string[]>(allFields);
 
   const activeYears = (years.data?.data ?? []).filter((y) => y.isActive);
-  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
 
   async function onFile(file: File | null) {
     setResults(null);

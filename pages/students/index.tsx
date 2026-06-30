@@ -24,7 +24,7 @@ export default function StudentsPage() {
   const [statusFilter, setStatusFilter] = useState<string>("aktif");
   const { query, update } = useStudents({ academicYearId: yearId ?? undefined, classId: classId ?? undefined });
 
-  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
   const rows = (query.data ?? []).filter((s) => statusFilter === "all" ? true : (s.status ?? "aktif") === statusFilter);
 

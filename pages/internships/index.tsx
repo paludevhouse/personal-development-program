@@ -108,7 +108,7 @@ export default function InternshipsPage() {
     validate: zodResolver(internshipFormSchema),
   });
 
-  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const studentOptions = (studentsHook.query.data ?? []).map((s) => ({ value: s.id, label: s.namaSiswa }));
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 

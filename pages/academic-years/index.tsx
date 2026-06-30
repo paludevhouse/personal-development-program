@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Group, Table, TextInput, Select, Switch, Stack, Modal, ActionIcon, Tooltip } from "@mantine/core";
+import { Button, Group, Table, TextInput, Switch, Stack, Modal, ActionIcon, Tooltip } from "@mantine/core";
 import { WarningOctagon, CalendarBlank, PencilSimple, UploadSimple } from "@phosphor-icons/react";
 import Link from "next/link";
 import { StateView } from "@/components/StateView";
@@ -13,13 +13,11 @@ import { FormModal } from "@/components/FormModal";
 import { academicYearSchema } from "@/lib/validation/schemas";
 import { AcademicYear } from "@/lib/types";
 
-const SEMESTER_OPTIONS = ["1 (Satu)", "2 (Dua)"];
-
 export default function AcademicYearsPage() {
   const { data, create, update, remove } = useAcademicYears();
   const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
   const form = useForm({
-    initialValues: { year: "", semester: "1 (Satu)", isActive: true },
+    initialValues: { year: "", isActive: true },
     validate: zodResolver(academicYearSchema),
   });
 
@@ -32,13 +30,12 @@ export default function AcademicYearsPage() {
             <form onSubmit={form.onSubmit((values) => {
               setLoading(true);
               create.mutate({ ...values, idempotencyKey: idemKey }, {
-                onSuccess: () => { setIdemKey(crypto.randomUUID()); form.reset(); form.setFieldValue("semester", "1 (Satu)"); setLoading(false); close(); },
+                onSuccess: () => { setIdemKey(crypto.randomUUID()); form.reset(); setLoading(false); close(); },
                 onError: () => { setLoading(false); },
               });
             })}>
               <Stack>
                 <TextInput label="Tahun" placeholder="2025/2026" {...form.getInputProps("year")} />
-                <Select label="Semester" data={SEMESTER_OPTIONS} allowDeselect={false} {...form.getInputProps("semester")} />
                 <Switch label="Aktif" {...form.getInputProps("isActive", { type: "checkbox" })} />
                 <Group justify="flex-end" mt="md">
                   <Button variant="default" onClick={close} disabled={loading}>Batal</Button>
@@ -58,11 +55,11 @@ export default function AcademicYearsPage() {
         <StateView icon={<CalendarBlank size={44} weight="duotone" />} title="Belum ada data" description="Tambah tahun ajaran untuk memulai." />
       ) : (
         <Table>
-          <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Semester</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+          <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
           <Table.Tbody>
             {(data.data ?? []).map((y) => (
               <Table.Tr key={y.id}>
-                <Table.Td>{y.year}</Table.Td><Table.Td>{y.semester}</Table.Td><Table.Td>{y.isActive ? "Ya" : "Tidak"}</Table.Td>
+                <Table.Td>{y.year}</Table.Td><Table.Td>{y.isActive ? "Ya" : "Tidak"}</Table.Td>
                 <Table.Td>
                   <Group gap="xs">
                     <EditYear year={y} onSave={(v) => update.mutate(v)} />
@@ -81,13 +78,13 @@ export default function AcademicYearsPage() {
 function EditYear({ year, onSave }: { year: AcademicYear; onSave: (v: AcademicYear) => void }) {
   const [opened, { open, close }] = useDisclosure(false);
   const form = useForm({
-    initialValues: { year: year.year, semester: year.semester, isActive: year.isActive },
+    initialValues: { year: year.year, isActive: year.isActive },
     validate: zodResolver(academicYearSchema),
   });
   return (
     <>
       <Tooltip label="Ubah">
-        <ActionIcon variant="light" onClick={() => { form.setValues({ year: year.year, semester: year.semester, isActive: year.isActive }); open(); }}>
+        <ActionIcon variant="light" onClick={() => { form.setValues({ year: year.year, isActive: year.isActive }); open(); }}>
           <PencilSimple size={16} />
         </ActionIcon>
       </Tooltip>
@@ -95,7 +92,6 @@ function EditYear({ year, onSave }: { year: AcademicYear; onSave: (v: AcademicYe
         <form onSubmit={form.onSubmit((v) => { onSave({ ...year, ...v }); close(); })}>
           <Stack>
             <TextInput label="Tahun" {...form.getInputProps("year")} />
-            <Select label="Semester" data={SEMESTER_OPTIONS} allowDeselect={false} {...form.getInputProps("semester")} />
             <Switch label="Aktif" {...form.getInputProps("isActive", { type: "checkbox" })} />
             <Button type="submit">Simpan</Button>
           </Stack>

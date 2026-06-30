@@ -28,7 +28,7 @@ export default function ClassesPage() {
   const activeYears = yearsList.filter((y) => y.isActive);
   useDefaultYear(activeYears, yearId, setYearId);
   const { data, create, update, remove } = useClasses(yearId ?? undefined);
-  const yearOptions = activeYears.map((y) => ({ value: y.id, label: `${y.year} - ${y.semester}` }));
+  const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const form = useForm({
     initialValues: { name: "", waliKelas: "" },
     validate: zodResolver(classFormSchema),

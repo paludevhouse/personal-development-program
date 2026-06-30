@@ -9,7 +9,7 @@ type TemplateType =
   | "counseling";
 
 export const TEMPLATE_HEADERS: Record<TemplateType, string[]> = {
-  "academic-years": ["year", "semester", "isActive"],
+  "academic-years": ["year", "isActive"],
   "classes": ["name", "waliKelas"],
   "students": ["namaSiswa", "nis", "gender", "status"],
   "master-magang": ["perusahaan", "pic", "phone", "alamat"],
@@ -19,7 +19,6 @@ export const TEMPLATE_HEADERS: Record<TemplateType, string[]> = {
 
 export const FIELD_LABELS: Record<string, string> = {
   "year": "Tahun",
-  "semester": "Semester",
   "isActive": "Status Aktif",
   "name": "Nama Kelas",
   "waliKelas": "Wali Kelas",

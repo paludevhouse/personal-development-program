@@ -20,7 +20,6 @@ function useAcademicYearImport() {
         try {
           await axios.post("/api/academic-years", {
             year: String(row.year),
-            semester: String(row.semester),
             isActive: row.isActive === true,
           });
           success.push(row);
@@ -41,7 +40,7 @@ export default function ImportAcademicYearsPage() {
   const [parsed, setParsed] = useState<Omit<AcademicYear, "id">[]>([]);
   const [results, setResults] = useState<{ success: Omit<AcademicYear, "id">[]; failed: { row: Omit<AcademicYear, "id">; error: string }[] } | null>(null);
   const importMut = useAcademicYearImport();
-  
+
   // Template download modal
   const [opened, { open, close }] = useDisclosure(false);
   const allFields = TEMPLATE_HEADERS["academic-years"];
@@ -57,17 +56,16 @@ export default function ImportAcademicYearsPage() {
     const wb = XLSX.read(buf);
     const ws = wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
-    
+
     // Map Excel rows (with Indo headers) back to English keys
     const data = rows.map((raw) => {
       const r = parseIndonesianRow(raw);
       return {
         year: String(r.year || ""),
-        semester: String(r.semester || ""),
         isActive: Boolean(r.isActive),
       };
-    }).filter(r => r.year && r.semester);
-    
+    }).filter(r => r.year);
+
     setParsed(data);
   }
 
@@ -124,12 +122,12 @@ export default function ImportAcademicYearsPage() {
       <Card withBorder padding="lg" radius="md">
         <Stack>
           <Text fw={500}>Unggah File Data (Excel)</Text>
-          <FileInput 
+          <FileInput
             size="md"
-            label="Pilih atau seret file ke sini" 
+            label="Pilih atau seret file ke sini"
             placeholder="Pilih file .xlsx"
-            accept=".xlsx" 
-            onChange={onFile} 
+            accept=".xlsx"
+            onChange={onFile}
             leftSection={<UploadSimple size={20} />}
             clearable
           />
@@ -144,7 +142,6 @@ export default function ImportAcademicYearsPage() {
               <Table.Thead>
                 <Table.Tr>
                   <Table.Th>Tahun</Table.Th>
-                  <Table.Th>Semester</Table.Th>
                   <Table.Th>Aktif</Table.Th>
                 </Table.Tr>
               </Table.Thead>
@@ -152,7 +149,6 @@ export default function ImportAcademicYearsPage() {
                 {parsed.map((s, i) => (
                   <Table.Tr key={i}>
                     <Table.Td>{s.year}</Table.Td>
-                    <Table.Td>{s.semester}</Table.Td>
                     <Table.Td>{s.isActive ? "Ya" : "Tidak"}</Table.Td>
                   </Table.Tr>
                 ))}
@@ -173,11 +169,11 @@ export default function ImportAcademicYearsPage() {
             <Text c={results.failed.length > 0 ? "red" : "dimmed"}>Gagal: {results.failed.length} baris</Text>
             {results.failed.length > 0 && (
               <Table striped>
-                <Table.Thead><Table.Tr><Table.Th>Data (Tahun - Semester)</Table.Th><Table.Th>Pesan Error</Table.Th></Table.Tr></Table.Thead>
+                <Table.Thead><Table.Tr><Table.Th>Data (Tahun)</Table.Th><Table.Th>Pesan Error</Table.Th></Table.Tr></Table.Thead>
                 <Table.Tbody>
                   {results.failed.map((f, i) => (
                     <Table.Tr key={i}>
-                      <Table.Td>{f.row.year} - {f.row.semester}</Table.Td>
+                      <Table.Td>{f.row.year}</Table.Td>
                       <Table.Td c="red">{f.error}</Table.Td>
                     </Table.Tr>
                   ))}
