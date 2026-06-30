@@ -74,6 +74,7 @@ export default methods({
       tanggal?: string;
     };
 
+    if (!internshipId) throw new ApiError(400, "internshipId required");
     const target = await repo.get("internships", internshipId);
     if (!target) throw new ApiError(404, "internship not found");
 
