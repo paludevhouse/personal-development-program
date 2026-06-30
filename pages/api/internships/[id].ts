@@ -13,7 +13,7 @@ export default methods({
     await requireAdmin(req);
     const b = req.body ?? {};
     return repo.update("internships", req.query.id as string, {
-      lokasiMagang: b.lokasiMagang, posisi: b.posisi, pembimbing: b.pembimbing, tanggal: b.tanggal,
+      lokasiMagang: b.lokasiMagang, posisi: b.posisi, pembimbing: b.pembimbing, phone: b.phone ?? "", tanggal: b.tanggal,
     });
   },
   DELETE: async (req) => {

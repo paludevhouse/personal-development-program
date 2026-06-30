@@ -30,6 +30,7 @@ export const internshipSchema = z.object({
   lokasiMagang: z.string().trim().default(""),
   posisi: z.string().trim().default(""),
   pembimbing: z.string().trim().default(""),
+  phone: z.string().trim().default(""),
 });
 
 /** Parse with a schema; throw the first issue message as an Error on failure. */
