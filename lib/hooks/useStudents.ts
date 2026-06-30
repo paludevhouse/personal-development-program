@@ -8,7 +8,7 @@ export function useStudents(filters: { classId?: string; academicYearId?: string
   if (filters.academicYearId) params.set("academicYearId", filters.academicYearId);
   const query = useQuery<Student[]>({
     queryKey: ["students", filters],
-    queryFn: () => getJson<Student[]>(`/api/students?${params.toString()}`),
+    queryFn: ({ signal }) => getJson<Student[]>(`/api/students?${params.toString()}`, signal),
     enabled: false, // manual: only runs on refetch() (Search button)
   });
   const create = useMutation({ mutationFn: (b: Partial<Student>) => http.post("/api/students", b).then((r) => r.data), onSuccess: () => query.refetch() });

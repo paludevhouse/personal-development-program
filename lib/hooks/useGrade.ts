@@ -13,7 +13,7 @@ export interface GradeInfo {
 export function useGrade(token: string | undefined) {
   const info = useQuery<GradeInfo>({
     queryKey: ["grade", token],
-    queryFn: () => getJson<GradeInfo>(`/api/grade/${token}`),
+    queryFn: ({ signal }) => getJson<GradeInfo>(`/api/grade/${token}`, signal),
     enabled: !!token,
     retry: false,
   });

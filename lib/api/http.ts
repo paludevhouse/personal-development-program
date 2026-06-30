@@ -11,7 +11,7 @@ export const http = axios.create({
 });
 
 /** GET a URL and return the parsed JSON body. */
-export async function getJson<T>(url: string): Promise<T> {
-  const res = await http.get<T>(url);
+export async function getJson<T>(url: string, signal?: AbortSignal): Promise<T> {
+  const res = await http.get<T>(url, { signal });
   return res.data;
 }
