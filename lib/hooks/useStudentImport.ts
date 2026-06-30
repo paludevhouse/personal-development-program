@@ -4,6 +4,7 @@ import { ParsedStudent } from "@/lib/excel/parseStudents";
 
 export function useStudentImport() {
   return useMutation({
+    meta: { suppressErrorToast: true },
     mutationFn: (payload: {
       academicYearId: string;
       classId: string;

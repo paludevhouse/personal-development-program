@@ -19,6 +19,7 @@ export function useGrade(token: string | undefined) {
   });
 
   const submit = useMutation({
+    meta: { suppressErrorToast: true },
     mutationFn: (payload: {
       ratings: InternshipRatings;
       lokasiMagang: string;

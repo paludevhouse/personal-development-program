@@ -4,6 +4,7 @@ import { getClientAuth } from "@/lib/firebase/client";
 
 export function useChangePassword() {
   return useMutation({
+    meta: { suppressErrorToast: true },
     mutationFn: async ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) => {
       const user = getClientAuth().currentUser;
       if (!user || !user.email) throw new Error("Tidak ada sesi pengguna");

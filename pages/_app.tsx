@@ -9,7 +9,9 @@ import Head from "next/head";
 import { useRouter } from "next/router";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
+import { notifications } from "@mantine/notifications";
+import { getErrorMessage } from "@/lib/api/errorMessage";
 import { AppLayout } from "@/components/AppLayout";
 import { routeMeta, APP_NAME } from "@/lib/routes";
 import { createAppTheme } from "@/lib/theme";
@@ -23,7 +25,20 @@ export type NextPageWithLayout<P = {}> = NextPage<P> & {
 };
 
 export default function App({ Component, pageProps }: AppProps & { Component: NextPageWithLayout }) {
-  const [qc] = useState(() => new QueryClient());
+  const [qc] = useState(() => new QueryClient({
+    queryCache: new QueryCache({
+      onError: (error) => {
+        notifications.show({ color: "red", title: "Gagal memuat", message: getErrorMessage(error) });
+      },
+    }),
+    mutationCache: new MutationCache({
+      onError: (error, _vars, _ctx, mutation) => {
+        if (mutation.meta?.suppressErrorToast) return;
+        notifications.show({ color: "red", title: "Gagal", message: getErrorMessage(error) });
+      },
+    }),
+    defaultOptions: { queries: { retry: 1 } },
+  }));
   const { pathname } = useRouter();
   const meta = routeMeta(pathname);
   const pageTitle = pathname === "/" ? APP_NAME : `${meta.title} · ${APP_NAME}`;
