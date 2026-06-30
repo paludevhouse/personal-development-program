@@ -2,6 +2,13 @@ import { useMutation } from "@tanstack/react-query";
 import { http } from "@/lib/api/http";
 import { ParsedStudent } from "@/lib/excel/parseStudents";
 
+export interface StudentImportResult {
+  created: number;
+  updated: number;
+  success: ParsedStudent[];
+  failed: { row: ParsedStudent; error: string }[];
+}
+
 export function useStudentImport() {
   return useMutation({
     meta: { suppressErrorToast: true },
@@ -12,6 +19,6 @@ export function useStudentImport() {
     }) =>
       http
         .post("/api/students/import", payload)
-        .then((r) => r.data as { created: number; updated: number }),
+        .then((r) => r.data as StudentImportResult),
   });
 }

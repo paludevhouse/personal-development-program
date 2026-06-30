@@ -3,8 +3,10 @@ import { Student } from "@/lib/types";
 
 export function buildRosterWorkbook(students: Student[]): XLSX.WorkBook {
   const rows = students.map((s) => ({
-    "Nama Siswa": s.namaSiswa, "Nama Besar": s.namaBesar, "Nama Pendek": s.namaPendek,
-    "Nomor Induk Sekolah": s.nis, "NISN": s.nisn, "Jenis Kelamin": s.gender,
+    "Nama Lengkap": s.namaSiswa,
+    "NIS": s.nis,
+    "Jenis Kelamin": s.gender,
+    "Status": s.status,
   }));
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();

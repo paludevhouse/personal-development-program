@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Group, Table, TextInput, Select, Switch, Stack, Modal, ActionIcon, Tooltip } from "@mantine/core";
-import { WarningOctagon, CalendarBlank, PencilSimple } from "@phosphor-icons/react";
+import { WarningOctagon, CalendarBlank, PencilSimple, UploadSimple } from "@phosphor-icons/react";
+import Link from "next/link";
 import { StateView } from "@/components/StateView";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
@@ -27,17 +28,27 @@ export default function AcademicYearsPage() {
       <PageHeader />
       <Group align="end">
         <FormModal title="Tambah Tahun Ajaran">
-          {(close) => (
-            <form onSubmit={form.onSubmit((values) => { create.mutate({ ...values, idempotencyKey: idemKey }, { onSuccess: () => setIdemKey(crypto.randomUUID()) }); form.reset(); form.setFieldValue("semester", "1 (Satu)"); close(); })}>
+          {(close, { loading, setLoading }) => (
+            <form onSubmit={form.onSubmit((values) => {
+              setLoading(true);
+              create.mutate({ ...values, idempotencyKey: idemKey }, {
+                onSuccess: () => { setIdemKey(crypto.randomUUID()); form.reset(); form.setFieldValue("semester", "1 (Satu)"); setLoading(false); close(); },
+                onError: () => { setLoading(false); },
+              });
+            })}>
               <Stack>
                 <TextInput label="Tahun" placeholder="2025/2026" {...form.getInputProps("year")} />
                 <Select label="Semester" data={SEMESTER_OPTIONS} allowDeselect={false} {...form.getInputProps("semester")} />
                 <Switch label="Aktif" {...form.getInputProps("isActive", { type: "checkbox" })} />
-                <Button type="submit">Simpan</Button>
+                <Group justify="flex-end" mt="md">
+                  <Button variant="default" onClick={close} disabled={loading}>Batal</Button>
+                  <Button type="submit" loading={loading}>Simpan</Button>
+                </Group>
               </Stack>
             </form>
           )}
         </FormModal>
+        <Button component={Link} href="/academic-years/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
       </Group>
       {data.isLoading ? (
         <LoadingView />

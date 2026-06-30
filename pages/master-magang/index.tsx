@@ -1,7 +1,8 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
 import { ActionIcon, Button, Group, Stack, Table, TextInput, Tooltip, Modal } from "@mantine/core";
-import { WhatsappLogo, DownloadSimple, WarningOctagon, Buildings, PencilSimple } from "@phosphor-icons/react";
+import { WhatsappLogo, DownloadSimple, WarningOctagon, Buildings, PencilSimple, UploadSimple } from "@phosphor-icons/react";
+import Link from "next/link";
 import { StateView } from "@/components/StateView";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
@@ -32,6 +33,7 @@ export default function MasterMagangPage() {
     <Stack>
       <PageHeader />
       <Group>
+        <Button component={Link} href="/master-magang/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
         <Button variant="light" disabled={!companies.length} onClick={() => XLSX.writeFile(buildCompaniesWorkbook(companies), "master-magang.xlsx")} leftSection={<DownloadSimple size={16} weight="bold" />}>Ekspor Excel</Button>
       </Group>
       <Group align="end">

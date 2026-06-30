@@ -4,7 +4,8 @@ import { DateInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { ChatCircleText, PencilSimple, WarningOctagon } from "@phosphor-icons/react";
+import { ChatCircleText, PencilSimple, WarningOctagon, UploadSimple } from "@phosphor-icons/react";
+import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { FormModal } from "@/components/FormModal";
 import { StateView } from "@/components/StateView";
@@ -215,6 +216,7 @@ export default function CounselingPage() {
             </form>
           )}
         </FormModal>
+        <Button component={Link} href="/counseling/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
       </Group>
       {data.isLoading ? (
         <LoadingView />

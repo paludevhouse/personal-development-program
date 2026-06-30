@@ -4,7 +4,8 @@ import { Button, Group, Select, Stack, Table, TextInput, Modal, ActionIcon, Tool
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { WarningOctagon, Chalkboard, PencilSimple } from "@phosphor-icons/react";
+import { WarningOctagon, Chalkboard, PencilSimple, UploadSimple } from "@phosphor-icons/react";
+import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { StateView } from "@/components/StateView";
 import { LoadingView } from "@/components/LoadingView";
@@ -39,16 +40,26 @@ export default function ClassesPage() {
       <Group align="end">
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
         <FormModal title="Tambah Kelas">
-          {(close) => (
-            <form onSubmit={form.onSubmit((values) => { create.mutate({ name: values.name, academicYearId: yearId!, waliKelas: values.waliKelas, idempotencyKey: idemKey }, { onSuccess: () => setIdemKey(crypto.randomUUID()) }); form.reset(); close(); })}>
+          {(close, { loading, setLoading }) => (
+            <form onSubmit={form.onSubmit((values) => {
+              setLoading(true);
+              create.mutate({ name: values.name, academicYearId: yearId!, waliKelas: values.waliKelas, idempotencyKey: idemKey }, {
+                onSuccess: () => { setIdemKey(crypto.randomUUID()); form.reset(); setLoading(false); close(); },
+                onError: () => { setLoading(false); },
+              });
+            })}>
               <Stack>
                 <TextInput label="Nama Kelas" placeholder="XII.1" {...form.getInputProps("name")} />
                 <TextInput label="Wali Kelas" {...form.getInputProps("waliKelas")} />
-                <Button type="submit" disabled={!yearId}>Simpan</Button>
+                <Group justify="flex-end" mt="md">
+                  <Button variant="default" onClick={close} disabled={loading}>Batal</Button>
+                  <Button type="submit" loading={loading} disabled={!yearId}>Simpan</Button>
+                </Group>
               </Stack>
             </form>
           )}
         </FormModal>
+        <Button component={Link} href="/classes/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
       </Group>
       {data.isLoading ? (
         <LoadingView />

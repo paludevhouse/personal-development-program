@@ -3,8 +3,9 @@ import { ActionIcon, Badge, Button, CopyButton, Group, Modal, Select, Stack, Tab
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { Briefcase, LinkSimple, PencilSimple, Users, WarningOctagon } from "@phosphor-icons/react";
+import { Briefcase, LinkSimple, PencilSimple, Users, WarningOctagon, UploadSimple } from "@phosphor-icons/react";
 import { WhatsappLogo } from "@phosphor-icons/react";
+import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { FormModal } from "@/components/FormModal";
 import { StateView } from "@/components/StateView";
@@ -149,6 +150,7 @@ export default function InternshipsPage() {
             </form>
           )}
         </FormModal>
+        <Button component={Link} href="/internships/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
       </Group>
       {data.isLoading ? (
         <LoadingView />

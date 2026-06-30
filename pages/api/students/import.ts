@@ -13,20 +13,29 @@ export default methods({
     const list = students ?? [];
 
     const existing = await repo.list("students");
-    const byNisn = new Map(existing.map((s) => [String(s.nisn), s.id as string]));
+    const byNis = new Map(existing.map((s) => [String(s.nis), s.id as string]));
     const existingEnroll = await repo.list("enrollments", [["classId", classId], ["academicYearId", academicYearId]]);
     const enrolledStudentIds = new Set(existingEnroll.map((e) => e.studentId as string));
 
     let created = 0, updated = 0;
+    const success: ParsedStudent[] = [];
+    const failed: { row: ParsedStudent; error: string }[] = [];
+
     for (const s of list) {
-      let id: string | undefined = s.nisn ? byNisn.get(String(s.nisn)) : undefined;
-      if (id) { await repo.update("students", id, { ...s }); updated++; }
-      else { const r = await repo.create("students", { ...s, status: "aktif" }); id = r.id as string; created++; }
-      if (id && !enrolledStudentIds.has(id)) {
-        await repo.create("enrollments", { studentId: id, classId, academicYearId });
-        enrolledStudentIds.add(id);
+      try {
+        let id: string | undefined = s.nis ? byNis.get(String(s.nis)) : undefined;
+        if (id) { await repo.update("students", id, { ...s }); updated++; }
+        else { const r = await repo.create("students", { ...s, status: "aktif" }); id = r.id as string; created++; }
+        if (id && !enrolledStudentIds.has(id)) {
+          await repo.create("enrollments", { studentId: id, classId, academicYearId });
+          enrolledStudentIds.add(id);
+        }
+        success.push(s);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Gagal mengimpor";
+        failed.push({ row: s, error: message });
       }
     }
-    return { created, updated };
+    return { created, updated, success, failed };
   },
 });

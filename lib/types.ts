@@ -5,7 +5,7 @@ export interface Company { id: string; perusahaan: string; pic: string; phone: s
 
 export interface AcademicYear { id: string; year: string; semester: string; isActive: boolean; idempotencyKey?: string; }
 export interface SchoolClass { id: string; name: string; academicYearId: string; waliKelas: string; idempotencyKey?: string; }
-export interface Student { id: string; namaSiswa: string; namaBesar: string; namaPendek: string; nis: string; nisn: string; gender: Gender; status: StudentStatus; }
+export interface Student { id: string; namaSiswa: string; nis: string; gender: Gender; status: StudentStatus; }
 export interface Enrollment { id: string; studentId: string; classId: string; academicYearId: string; }
 
 export type CounselingCategory = "Akademik" | "Pribadi" | "Sosial" | "Karir";
