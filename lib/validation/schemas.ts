@@ -33,6 +33,17 @@ export const internshipSchema = z.object({
   phone: z.string().trim().default(""),
 });
 
+export const counselingSchema = z.object({
+  studentId: z.string().trim().min(1, "Siswa wajib dipilih"),
+  studentName: z.string().trim().default(""),
+  date: z.string().trim().min(1, "Tanggal wajib diisi"),
+  category: z.enum(["Akademik", "Pribadi", "Sosial", "Karir"]),
+  notes: z.string().trim().default(""),
+  followUp: z.string().trim().default(""),
+  status: z.enum(["open", "selesai"]).default("open"),
+  counselor: z.string().trim().default(""),
+});
+
 /** Parse with a schema; throw the first issue message as an Error on failure. */
 export function parseOrThrow<T>(schema: z.ZodType<T>, data: unknown): T {
   const r = schema.safeParse(data);

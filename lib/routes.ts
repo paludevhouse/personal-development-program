@@ -10,11 +10,12 @@ export const ROUTES: Record<string, RouteMeta> = {
   "/academic-years": { title: "Tahun Ajaran", description: "Kelola tahun ajaran" },
   "/internships": { title: "Magang", description: "Penempatan dan penilaian magang siswa" },
   "/master-magang": { title: "Master Magang", description: "Data perusahaan, PIC, dan kontak" },
+  "/counseling": { title: "Konseling", description: "Riwayat dan catatan konseling siswa" },
   "/settings": { title: "Pengaturan", description: "Template pesan WhatsApp" },
   "/login": { title: "Masuk" },
 };
 
-export const APP_NAME = "MDC Management";
+export const APP_NAME = "Personal Development Program (Pedevpro)";
 
 /** Look up meta for a pathname, with a fallback. */
 export function routeMeta(pathname: string): RouteMeta {

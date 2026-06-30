@@ -8,6 +8,20 @@ export interface SchoolClass { id: string; name: string; academicYearId: string;
 export interface Student { id: string; namaSiswa: string; namaBesar: string; namaPendek: string; nis: string; nisn: string; gender: Gender; status: StudentStatus; }
 export interface Enrollment { id: string; studentId: string; classId: string; academicYearId: string; }
 
+export type CounselingCategory = "Akademik" | "Pribadi" | "Sosial" | "Karir";
+export interface Counseling {
+  id: string;
+  studentId: string;
+  studentName: string;   // denormalized at write time
+  date: string;          // YYYY-MM-DD
+  category: CounselingCategory;
+  notes: string;
+  followUp: string;
+  status: "open" | "selesai";
+  counselor: string;
+  idempotencyKey?: string;
+}
+
 export type Rating = "A" | "B" | "C";
 export interface InternshipRatings {
   kedisiplinan: Rating | null; kerjasama: Rating | null; inisiatif: Rating | null;
