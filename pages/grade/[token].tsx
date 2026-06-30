@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { Button, Card, Group, Select, Stack, Title, Text, Alert, TextInput } from "@mantine/core";
-import { http } from "@/lib/api/http";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
+import { useGrade } from "@/lib/hooks/useGrade";
 import type { NextPageWithLayout } from "@/pages/_app";
 
 const RATING_OPTIONS = [
@@ -16,55 +16,59 @@ const RATING_OPTIONS = [
 const GradePage: NextPageWithLayout = () => {
   const router = useRouter();
   const token = router.query.token as string | undefined;
-  const [info, setInfo] = useState<{ studentName: string; lokasiMagang: string; posisi: string; pembimbing: string; status: string } | null>(null);
-  const [notFound, setNotFound] = useState(false);
+
+  const { info, submit } = useGrade(token);
+
   const [ratings, setRatings] = useState<Partial<InternshipRatings>>({});
   const [lokasiMagang, setLokasiMagang] = useState("");
   const [posisi, setPosisi] = useState("");
   const [pembimbing, setPembimbing] = useState("");
   const [done, setDone] = useState(false);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!token) return;
-    http.get(`/api/grade/${token}`)
-      .then((r) => {
-        setInfo(r.data);
-        setLokasiMagang(r.data.lokasiMagang ?? "");
-        setPosisi(r.data.posisi ?? "");
-        setPembimbing(r.data.pembimbing ?? "");
-        if (r.data.status === "graded") setDone(true);
-      })
-      .catch(() => setNotFound(true));
-  }, [token]);
+    if (!info.data) return;
+    setLokasiMagang(info.data.lokasiMagang ?? "");
+    setPosisi(info.data.posisi ?? "");
+    setPembimbing(info.data.pembimbing ?? "");
+    if (info.data.status === "graded") setDone(true);
+  }, [info.data]);
 
-  async function submit() {
+  const notFound = info.isError;
+  const loading = info.isLoading || !info.data;
+
+  function handleSubmit() {
     if (CRITERIA.some((c) => !ratings[c.key]) || !lokasiMagang || !posisi || !pembimbing) {
       setError("Mohon lengkapi semua data dan kriteria"); return;
     }
-    setSaving(true); setError("");
-    try {
-      await http.post(`/api/grade/${token}`, { ratings, lokasiMagang, posisi, pembimbing });
-      setDone(true);
-    } catch (e) {
-      if (axios.isAxiosError(e) && e.response?.status === 409) {
-        setError("Penilaian sudah dikirim sebelumnya"); setDone(true);
-      } else {
-        setError("Gagal mengirim penilaian");
+    setError("");
+    submit.mutate(
+      { ratings: ratings as InternshipRatings, lokasiMagang, posisi, pembimbing },
+      {
+        onSuccess: () => setDone(true),
+        onError: (e) => {
+          if (axios.isAxiosError(e) && e.response?.status === 409) {
+            setError("Penilaian sudah dikirim sebelumnya");
+            setDone(true);
+          } else {
+            setError("Gagal mengirim penilaian");
+          }
+        },
       }
-    } finally { setSaving(false); }
+    );
   }
 
   if (notFound) return <Alert color="red" maw={500} mx="auto" mt={80}>Link tidak valid.</Alert>;
-  if (!info) return <Text ta="center" mt={80}>Memuat...</Text>;
+  if (loading) return <Text ta="center" mt={80}>Memuat...</Text>;
+
+  const isDone = done || info.data?.status === "graded";
 
   return (
     <Card maw={560} mx="auto" mt={60} withBorder padding="lg">
       <Stack>
         <Title order={3}>Penilaian Magang</Title>
-        <Text><b>Siswa:</b> {info.studentName}</Text>
-        {done ? (
+        <Text><b>Siswa:</b> {info.data?.studentName}</Text>
+        {isDone ? (
           <Alert color="green">Terima kasih. Penilaian telah dikirim.</Alert>
         ) : (
           <>
@@ -77,7 +81,7 @@ const GradePage: NextPageWithLayout = () => {
                 onChange={(v) => setRatings((p) => ({ ...p, [c.key]: v as Rating }))} />
             ))}
             {error && <Text c="red">{error}</Text>}
-            <Group justify="flex-end"><Button loading={saving} onClick={submit}>Kirim Penilaian</Button></Group>
+            <Group justify="flex-end"><Button loading={submit.isPending} onClick={handleSubmit}>Kirim Penilaian</Button></Group>
           </>
         )}
       </Stack>

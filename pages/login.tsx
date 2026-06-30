@@ -1,30 +1,24 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { getClientAuth } from "@/lib/firebase/client";
-import { http } from "@/lib/api/http";
 import { Button, Card, PasswordInput, TextInput, Title, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { useLogin } from "@/lib/hooks/useLogin";
 import type { NextPageWithLayout } from "@/pages/_app";
 
 const LoginPage: NextPageWithLayout = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const login = useLogin();
 
-  async function submit() {
-    setLoading(true);
-    try {
-      const cred = await signInWithEmailAndPassword(getClientAuth(), email, password);
-      const idToken = await cred.user.getIdToken();
-      await http.post("/api/auth/login", { idToken });
-      router.push("/");
-    } catch {
-      notifications.show({ color: "red", message: "Email atau kata sandi salah" });
-    } finally {
-      setLoading(false);
-    }
+  function submit() {
+    login.mutate(
+      { email, password },
+      {
+        onSuccess: () => router.push("/"),
+        onError: () => notifications.show({ color: "red", message: "Email atau kata sandi salah" }),
+      }
+    );
   }
 
   return (
@@ -34,7 +28,7 @@ const LoginPage: NextPageWithLayout = () => {
         <Title order={2}>Masuk</Title>
         <TextInput label="Email" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
         <PasswordInput label="Kata Sandi" value={password} onChange={(e) => setPassword(e.currentTarget.value)} />
-        <Button loading={loading} onClick={submit}>Masuk</Button>
+        <Button loading={login.isPending} onClick={submit}>Masuk</Button>
       </Stack>
     </Card>
   );

@@ -2,9 +2,9 @@ import { useState } from "react";
 import * as XLSX from "xlsx";
 import { Button, FileInput, Group, Select, Stack, Table, Title, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
-import { http } from "@/lib/api/http";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useClasses } from "@/lib/hooks/useClasses";
+import { useStudentImport } from "@/lib/hooks/useStudentImport";
 import { parseStudentRows, ParsedStudent } from "@/lib/excel/parseStudents";
 
 export default function ImportPage() {
@@ -13,7 +13,7 @@ export default function ImportPage() {
   const classes = useClasses(yearId ?? undefined);
   const [classId, setClassId] = useState<string | null>(null);
   const [parsed, setParsed] = useState<ParsedStudent[]>([]);
-  const [saving, setSaving] = useState(false);
+  const importMut = useStudentImport();
 
   async function onFile(file: File | null) {
     if (!file) return;
@@ -24,17 +24,18 @@ export default function ImportPage() {
     setParsed(parseStudentRows(rows));
   }
 
-  async function confirm() {
+  function confirm() {
     if (!yearId || !classId) { notifications.show({ color: "red", message: "Pilih tahun ajaran dan kelas" }); return; }
-    setSaving(true);
-    try {
-      const res = await http.post("/api/students/import", { academicYearId: yearId, classId, students: parsed });
-      const { created, updated } = res.data;
-      notifications.show({ color: "green", message: `Berhasil: ${created} baru, ${updated} diperbarui` });
-      setParsed([]);
-    } catch {
-      notifications.show({ color: "red", message: "Impor gagal" });
-    } finally { setSaving(false); }
+    importMut.mutate(
+      { academicYearId: yearId, classId, students: parsed },
+      {
+        onSuccess: ({ created, updated }) => {
+          notifications.show({ color: "green", message: `Berhasil: ${created} baru, ${updated} diperbarui` });
+          setParsed([]);
+        },
+        onError: () => notifications.show({ color: "red", message: "Impor gagal" }),
+      }
+    );
   }
 
   const activeYears = (years.data.data ?? []).filter((y) => y.isActive);
@@ -56,7 +57,7 @@ export default function ImportPage() {
             <Table.Thead><Table.Tr><Table.Th>Nama</Table.Th><Table.Th>NIS</Table.Th><Table.Th>NISN</Table.Th><Table.Th>L/P</Table.Th></Table.Tr></Table.Thead>
             <Table.Tbody>{parsed.map((s, i) => (<Table.Tr key={i}><Table.Td>{s.namaSiswa}</Table.Td><Table.Td>{s.nis}</Table.Td><Table.Td>{s.nisn}</Table.Td><Table.Td>{s.gender}</Table.Td></Table.Tr>))}</Table.Tbody>
           </Table>
-          <Button loading={saving} onClick={confirm} disabled={!yearId || !classId}>Konfirmasi Impor</Button>
+          <Button loading={importMut.isPending} onClick={confirm} disabled={!yearId || !classId}>Konfirmasi Impor</Button>
         </>
       )}
     </Stack>
