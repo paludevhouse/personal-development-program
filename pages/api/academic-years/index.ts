@@ -10,9 +10,10 @@ export default methods({
   },
   POST: async (req) => {
     await requireAdmin(req);
+    const key = (req.body ?? {}).idempotencyKey as string | undefined;
     let input;
     try { input = parseOrThrow(academicYearSchema, req.body ?? {}); }
     catch (e) { throw new ApiError(400, (e as Error).message); }
-    return repo.create("academicYears", { ...input });
+    return repo.createWithKey("academicYears", { ...input }, key);
   },
 });

@@ -22,6 +22,7 @@ const classFormSchema = z.object({
 export default function ClassesPage() {
   const years = useAcademicYears();
   const [yearId, setYearId] = useState<string | null>(null);
+  const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
   const yearsList = years.data.data ?? [];
   const activeYears = yearsList.filter((y) => y.isActive);
   useDefaultYear(activeYears, yearId, setYearId);
@@ -39,7 +40,7 @@ export default function ClassesPage() {
         <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
         <FormModal title="Tambah Kelas">
           {(close) => (
-            <form onSubmit={form.onSubmit((values) => { create.mutate({ name: values.name, academicYearId: yearId!, waliKelas: values.waliKelas }); form.reset(); close(); })}>
+            <form onSubmit={form.onSubmit((values) => { create.mutate({ name: values.name, academicYearId: yearId!, waliKelas: values.waliKelas, idempotencyKey: idemKey }, { onSuccess: () => setIdemKey(crypto.randomUUID()) }); form.reset(); close(); })}>
               <Stack>
                 <TextInput label="Nama Kelas" placeholder="XII.1" {...form.getInputProps("name")} />
                 <TextInput label="Wali Kelas" {...form.getInputProps("waliKelas")} />

@@ -1,10 +1,10 @@
 export type Gender = "L" | "P";
 export type StudentStatus = "aktif" | "lulus" | "pindah";
 
-export interface Company { id: string; perusahaan: string; pic: string; phone: string; alamat: string; }
+export interface Company { id: string; perusahaan: string; pic: string; phone: string; alamat: string; idempotencyKey?: string; }
 
-export interface AcademicYear { id: string; year: string; semester: string; isActive: boolean; }
-export interface SchoolClass { id: string; name: string; academicYearId: string; waliKelas: string; }
+export interface AcademicYear { id: string; year: string; semester: string; isActive: boolean; idempotencyKey?: string; }
+export interface SchoolClass { id: string; name: string; academicYearId: string; waliKelas: string; idempotencyKey?: string; }
 export interface Student { id: string; namaSiswa: string; namaBesar: string; namaPendek: string; nis: string; nisn: string; gender: Gender; status: StudentStatus; }
 export interface Enrollment { id: string; studentId: string; classId: string; academicYearId: string; }
 
@@ -19,4 +19,5 @@ export interface Internship {
   lokasiMagang: string; posisi: string; pembimbing: string; phone: string;
   token: string; status: "pending" | "graded";
   ratings: InternshipRatings; nilaiAkhir: number | null; kategori: string | null; tanggal: string;
+  idempotencyKey?: string;
 }

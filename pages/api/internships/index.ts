@@ -17,14 +17,15 @@ export default methods({
   },
   POST: async (req) => {
     await requireAdmin(req);
+    const key = (req.body ?? {}).idempotencyKey as string | undefined;
     let input;
     try { input = parseOrThrow(internshipSchema, req.body ?? {}); }
     catch (e) { throw new ApiError(400, (e as Error).message); }
     const b = req.body ?? {};
-    return repo.create("internships", {
+    return repo.createWithKey("internships", {
       ...input,
       token: newToken(), status: "pending",
       ratings: EMPTY_RATINGS, nilaiAkhir: null, kategori: null, tanggal: b.tanggal ?? "",
-    });
+    }, key);
   },
 });

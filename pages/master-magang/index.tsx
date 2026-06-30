@@ -1,3 +1,4 @@
+import { useState } from "react";
 import * as XLSX from "xlsx";
 import { ActionIcon, Button, Group, Stack, Table, TextInput, Tooltip, Modal } from "@mantine/core";
 import { WhatsappLogo, DownloadSimple, WarningOctagon, Buildings, PencilSimple } from "@phosphor-icons/react";
@@ -18,6 +19,7 @@ import { Company } from "@/lib/types";
 
 export default function MasterMagangPage() {
   const { data, create, update, remove } = useCompanies();
+  const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
   const { data: waData } = useWhatsappTemplate();
   const companies = data.data ?? [];
   const template = waData.data?.template ?? "";
@@ -35,7 +37,7 @@ export default function MasterMagangPage() {
       <Group align="end">
         <FormModal title="Tambah Perusahaan">
           {(close) => (
-            <form onSubmit={form.onSubmit((values) => { create.mutate(values); form.reset(); close(); })}>
+            <form onSubmit={form.onSubmit((values) => { create.mutate({ ...values, idempotencyKey: idemKey }, { onSuccess: () => setIdemKey(crypto.randomUUID()) }); form.reset(); close(); })}>
               <Stack>
                 <TextInput label="Perusahaan" {...form.getInputProps("perusahaan")} />
                 <TextInput label="PIC" {...form.getInputProps("pic")} />

@@ -88,6 +88,7 @@ function EditInternship({ it, companyOptions, companyList, onSave }: EditInterns
 export default function InternshipsPage() {
   const years = useAcademicYears();
   const [yearId, setYearId] = useState<string | null>(null);
+  const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
   const activeYears = (years.data.data ?? []).filter((y) => y.isActive);
   useDefaultYear(activeYears, yearId, setYearId);
   const { data, create, update, remove } = useInternships(yearId ?? undefined);
@@ -121,7 +122,7 @@ export default function InternshipsPage() {
         <FormModal title="Tambah Penempatan" buttonLabel="Tambah Penempatan">
           {(close) => (
             <form onSubmit={form.onSubmit((values) => {
-              create.mutate({ academicYearId: yearId!, studentId: studentId!, ...values });
+              create.mutate({ academicYearId: yearId!, studentId: studentId!, ...values, idempotencyKey: idemKey }, { onSuccess: () => setIdemKey(crypto.randomUUID()) });
               form.reset();
               setStudentId(null);
               close();

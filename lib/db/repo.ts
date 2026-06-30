@@ -29,4 +29,12 @@ export const repo = {
     await getDb().collection(col).doc(id).delete();
     return { ok: true };
   },
+  async createWithKey(col: string, data: Record<string, unknown>, key?: string) {
+    if (key) {
+      const existing = await repo.list(col, [["idempotencyKey", key]]);
+      if (existing.length) return existing[0];
+      return repo.create(col, { ...data, idempotencyKey: key });
+    }
+    return repo.create(col, data);
+  },
 };

@@ -10,9 +10,10 @@ export default methods({
   },
   POST: async (req) => {
     await requireAdmin(req);
+    const key = (req.body ?? {}).idempotencyKey as string | undefined;
     let input;
     try { input = parseOrThrow(companySchema, req.body ?? {}); }
     catch (e) { throw new ApiError(400, (e as Error).message); }
-    return repo.create("companies", { ...input });
+    return repo.createWithKey("companies", { ...input }, key);
   },
 });

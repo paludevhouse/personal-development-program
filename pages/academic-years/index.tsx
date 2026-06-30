@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Button, Group, Table, TextInput, Select, Switch, Stack, Modal, ActionIcon, Tooltip } from "@mantine/core";
 import { WarningOctagon, CalendarBlank, PencilSimple } from "@phosphor-icons/react";
 import { StateView } from "@/components/StateView";
@@ -15,6 +16,7 @@ const SEMESTER_OPTIONS = ["1 (Satu)", "2 (Dua)"];
 
 export default function AcademicYearsPage() {
   const { data, create, update, remove } = useAcademicYears();
+  const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
   const form = useForm({
     initialValues: { year: "", semester: "1 (Satu)", isActive: false },
     validate: zodResolver(academicYearSchema),
@@ -26,7 +28,7 @@ export default function AcademicYearsPage() {
       <Group align="end">
         <FormModal title="Tambah Tahun Ajaran">
           {(close) => (
-            <form onSubmit={form.onSubmit((values) => { create.mutate(values); form.reset(); form.setFieldValue("semester", "1 (Satu)"); close(); })}>
+            <form onSubmit={form.onSubmit((values) => { create.mutate({ ...values, idempotencyKey: idemKey }, { onSuccess: () => setIdemKey(crypto.randomUUID()) }); form.reset(); form.setFieldValue("semester", "1 (Satu)"); close(); })}>
               <Stack>
                 <TextInput label="Tahun" placeholder="2025/2026" {...form.getInputProps("year")} />
                 <Select label="Semester" data={SEMESTER_OPTIONS} allowDeselect={false} {...form.getInputProps("semester")} />
