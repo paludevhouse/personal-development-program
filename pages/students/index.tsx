@@ -5,6 +5,7 @@ import { Button, Group, Select, Stack, Table } from "@mantine/core";
 import { MagnifyingGlass, UploadSimple, DownloadSimple, WarningOctagon, UsersThree } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/PageHeader";
 import { StateView } from "@/components/StateView";
+import { LoadingView } from "@/components/LoadingView";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
@@ -40,7 +41,9 @@ export default function StudentsPage() {
         <Select label="Status" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"},{value:"all",label:"Semua"}]} value={statusFilter} onChange={(v) => setStatusFilter(v ?? "aktif")} />
         <Button onClick={() => query.refetch()} loading={query.isFetching} leftSection={<MagnifyingGlass size={16} weight="bold" />}>Cari</Button>
       </Group>
-      {query.isError ? (
+      {query.isFetching ? (
+        <LoadingView />
+      ) : query.isError ? (
         <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data siswa." />
       ) : !query.isFetched ? (
         <StateView icon={<MagnifyingGlass size={44} weight="duotone" />} title="Mulai pencarian" description="Pilih tahun ajaran dan/atau kelas, lalu klik Cari." />

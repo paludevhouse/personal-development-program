@@ -7,6 +7,7 @@ import { zodResolver } from "mantine-form-zod-resolver";
 import { WarningOctagon, Chalkboard, PencilSimple } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/PageHeader";
 import { StateView } from "@/components/StateView";
+import { LoadingView } from "@/components/LoadingView";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
@@ -48,7 +49,9 @@ export default function ClassesPage() {
           )}
         </FormModal>
       </Group>
-      {data.isError ? (
+      {data.isLoading ? (
+        <LoadingView />
+      ) : data.isError ? (
         <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data. Muat ulang halaman." />
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<Chalkboard size={44} weight="duotone" />} title="Belum ada data" description="Tambah kelas untuk tahun ajaran terpilih." />

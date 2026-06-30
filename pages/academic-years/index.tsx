@@ -5,6 +5,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
+import { LoadingView } from "@/components/LoadingView";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { FormModal } from "@/components/FormModal";
 import { academicYearSchema } from "@/lib/validation/schemas";
@@ -36,7 +37,9 @@ export default function AcademicYearsPage() {
           )}
         </FormModal>
       </Group>
-      {data.isError ? (
+      {data.isLoading ? (
+        <LoadingView />
+      ) : data.isError ? (
         <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data. Muat ulang halaman." />
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<CalendarBlank size={44} weight="duotone" />} title="Belum ada data" description="Tambah tahun ajaran untuk memulai." />

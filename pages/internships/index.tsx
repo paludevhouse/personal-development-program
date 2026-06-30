@@ -8,6 +8,7 @@ import { WhatsappLogo } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/PageHeader";
 import { FormModal } from "@/components/FormModal";
 import { StateView } from "@/components/StateView";
+import { LoadingView } from "@/components/LoadingView";
 import { useInternships } from "@/lib/hooks/useInternships";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useStudents } from "@/lib/hooks/useStudents";
@@ -148,7 +149,9 @@ export default function InternshipsPage() {
           )}
         </FormModal>
       </Group>
-      {data.isError ? (
+      {data.isLoading ? (
+        <LoadingView />
+      ) : data.isError ? (
         <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data. Muat ulang halaman." />
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<Briefcase size={44} weight="duotone" />} title="Belum ada data" description="Pilih tahun ajaran lalu tambah penempatan magang." />

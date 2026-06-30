@@ -6,6 +6,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
 import { PageHeader } from "@/components/PageHeader";
+import { LoadingView } from "@/components/LoadingView";
 import { useCompanies } from "@/lib/hooks/useCompanies";
 import { buildCompaniesWorkbook } from "@/lib/excel/exportCompanies";
 import { waLink } from "@/lib/contact/waLink";
@@ -46,7 +47,9 @@ export default function MasterMagangPage() {
           )}
         </FormModal>
       </Group>
-      {data.isError ? (
+      {data.isLoading ? (
+        <LoadingView />
+      ) : data.isError ? (
         <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data. Muat ulang halaman." />
       ) : (companies.length === 0 && !data.isLoading) ? (
         <StateView icon={<Buildings size={44} weight="duotone" />} title="Belum ada data" description="Tambah perusahaan untuk membangun master data." />

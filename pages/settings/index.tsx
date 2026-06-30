@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Button, Stack, Textarea, Text } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { PageHeader } from "@/components/PageHeader";
+import { LoadingView } from "@/components/LoadingView";
 import { useWhatsappTemplate } from "@/lib/hooks/useWhatsappTemplate";
 
 export default function SettingsPage() {
@@ -18,17 +19,23 @@ export default function SettingsPage() {
       <Text size="sm" c="dimmed">
         Placeholder yang tersedia: {"{pic}"}, {"{siswa}"}, {"{perusahaan}"}, {"{link}"}
       </Text>
-      <Textarea minRows={5} autosize value={template} onChange={(e) => setTemplate(e.currentTarget.value)} />
-      <Button
-        loading={save.isPending}
-        onClick={() =>
-          save.mutate(template, {
-            onSuccess: () => notifications.show({ color: "green", message: "Template disimpan" }),
-          })
-        }
-      >
-        Simpan
-      </Button>
+      {data.isLoading ? (
+        <LoadingView />
+      ) : (
+        <>
+          <Textarea minRows={5} autosize value={template} onChange={(e) => setTemplate(e.currentTarget.value)} />
+          <Button
+            loading={save.isPending}
+            onClick={() =>
+              save.mutate(template, {
+                onSuccess: () => notifications.show({ color: "green", message: "Template disimpan" }),
+              })
+            }
+          >
+            Simpan
+          </Button>
+        </>
+      )}
     </Stack>
   );
 }
