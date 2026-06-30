@@ -30,7 +30,7 @@ const LoginPage: NextPageWithLayout = () => {
   return (
     <Card maw={400} mx="auto" mt={120} withBorder padding="lg">
       <Stack>
-        <img src="/logo.png" alt="MDC" height={48} style={{ height: 48, width: "auto", alignSelf: "center" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
+        <img src="/logo-mdc.png" alt="MDC" height={48} style={{ height: 48, width: "auto", alignSelf: "center" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
         <Title order={2}>Masuk</Title>
         <TextInput label="Email" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
         <PasswordInput label="Kata Sandi" value={password} onChange={(e) => setPassword(e.currentTarget.value)} />

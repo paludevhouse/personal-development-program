@@ -22,13 +22,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <Box style={{ height: "100%", display: "flex", flexDirection: "column" }}>
           <Group h="100%" px="lg" gap="sm" style={{ flex: 1 }}>
             <img
-              src="/logo.png"
+              src="/logo-mdc.png"
               alt="MDC"
               height={34}
               style={{ height: 34, width: "auto" }}
               onError={(e) => { e.currentTarget.style.display = "none"; }}
             />
-            <Title order={4} c="brand.8">MDC Management</Title>
+            <Title order={4} c="brand.8">Personal Development Program (Pedevpro)</Title>
           </Group>
           <Box style={{ height: 3, background: "var(--mantine-color-accent-6)" }} />
         </Box>
