@@ -33,6 +33,7 @@ export function createAppTheme(fontFamily?: string) {
       PasswordInput: { defaultProps: { radius: "md" } },
       Select: { defaultProps: { radius: "md" } },
       Textarea: { defaultProps: { radius: "md" } },
+      Modal: { styles: { title: { fontWeight: 700 } } },
     },
   });
 }

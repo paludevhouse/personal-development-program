@@ -11,7 +11,7 @@ import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
 import { notifications } from "@mantine/notifications";
-import { getErrorMessage } from "@/lib/api/errorMessage";
+import { getErrorMessage, getErrorStatus } from "@/lib/api/errorMessage";
 import { AppLayout } from "@/components/AppLayout";
 import { routeMeta, APP_NAME } from "@/lib/routes";
 import { createAppTheme } from "@/lib/theme";
@@ -28,13 +28,15 @@ export default function App({ Component, pageProps }: AppProps & { Component: Ne
   const [qc] = useState(() => new QueryClient({
     queryCache: new QueryCache({
       onError: (error) => {
-        notifications.show({ color: "red", title: "Gagal memuat", message: getErrorMessage(error) });
+        const s = getErrorStatus(error);
+        notifications.show({ color: "red", title: s ? `Gagal memuat (${s})` : "Gagal memuat", message: getErrorMessage(error) });
       },
     }),
     mutationCache: new MutationCache({
       onError: (error, _vars, _ctx, mutation) => {
         if (mutation.meta?.suppressErrorToast) return;
-        notifications.show({ color: "red", title: "Gagal", message: getErrorMessage(error) });
+        const s = getErrorStatus(error);
+        notifications.show({ color: "red", title: s ? `Gagal (${s})` : "Gagal", message: getErrorMessage(error) });
       },
     }),
     defaultOptions: { queries: { retry: 1 } },

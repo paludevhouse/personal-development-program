@@ -70,7 +70,7 @@ export default function ImportPage() {
       <Group justify="space-between">
         <Title order={2}>Impor Siswa</Title>
         <Button variant="light" leftSection={<DownloadSimple size={16} />} onClick={open}>
-          Unduh Templat
+          Unduh Template
         </Button>
       </Group>
       

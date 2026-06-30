@@ -114,7 +114,7 @@ export default function ImportCounselingPage() {
       <Group justify="space-between">
         <Title order={2}>Impor Konseling</Title>
         <Button variant="light" leftSection={<DownloadSimple size={16} />} onClick={open}>
-          Unduh Templat
+          Unduh Template
         </Button>
       </Group>
 

@@ -104,7 +104,7 @@ export default function ImportClassesPage() {
       <Group justify="space-between">
         <Title order={2}>Impor Kelas</Title>
         <Button variant="light" leftSection={<DownloadSimple size={16} />} onClick={open}>
-          Unduh Templat
+          Unduh Template
         </Button>
       </Group>
 

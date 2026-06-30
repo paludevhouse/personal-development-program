@@ -19,7 +19,7 @@ export default function AcademicYearsPage() {
   const { data, create, update, remove } = useAcademicYears();
   const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
   const form = useForm({
-    initialValues: { year: "", semester: "1 (Satu)", isActive: false },
+    initialValues: { year: "", semester: "1 (Satu)", isActive: true },
     validate: zodResolver(academicYearSchema),
   });
 

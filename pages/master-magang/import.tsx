@@ -101,7 +101,7 @@ export default function ImportCompaniesPage() {
       <Group justify="space-between">
         <Title order={2}>Impor Perusahaan</Title>
         <Button variant="light" leftSection={<DownloadSimple size={16} />} onClick={open}>
-          Unduh Templat
+          Unduh Template
         </Button>
       </Group>
 

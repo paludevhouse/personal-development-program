@@ -100,7 +100,7 @@ export default function ImportAcademicYearsPage() {
       <Group justify="space-between">
         <Title order={2}>Impor Tahun Ajaran</Title>
         <Button variant="light" leftSection={<DownloadSimple size={16} />} onClick={open}>
-          Unduh Templat
+          Unduh Template
         </Button>
       </Group>
 
