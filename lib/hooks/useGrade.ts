@@ -7,6 +7,8 @@ export interface GradeInfo {
   lokasiMagang: string;
   posisi: string;
   pembimbing: string;
+  phone: string;
+  tanggal: string;
   status: string;
 }
 
@@ -22,9 +24,12 @@ export function useGrade(token: string | undefined) {
     meta: { suppressErrorToast: true },
     mutationFn: (payload: {
       ratings: InternshipRatings;
+      studentName: string;
       lokasiMagang: string;
       posisi: string;
       pembimbing: string;
+      phone: string;
+      tanggal: string;
     }) => http.post(`/api/grade/${token}`, payload).then((r) => r.data),
   });
 

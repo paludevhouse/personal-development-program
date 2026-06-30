@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import { Button, Card, Group, Select, Stack, Title, Text, Alert, TextInput } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
 import { useGrade } from "@/lib/hooks/useGrade";
@@ -20,17 +21,23 @@ const GradePage: NextPageWithLayout = () => {
   const { info, submit } = useGrade(token);
 
   const [ratings, setRatings] = useState<Partial<InternshipRatings>>({});
+  const [studentName, setStudentName] = useState("");
   const [lokasiMagang, setLokasiMagang] = useState("");
   const [posisi, setPosisi] = useState("");
   const [pembimbing, setPembimbing] = useState("");
+  const [phone, setPhone] = useState("");
+  const [tanggal, setTanggal] = useState("");
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!info.data) return;
+    setStudentName(info.data.studentName ?? "");
     setLokasiMagang(info.data.lokasiMagang ?? "");
     setPosisi(info.data.posisi ?? "");
     setPembimbing(info.data.pembimbing ?? "");
+    setPhone(info.data.phone ?? "");
+    setTanggal(info.data.tanggal ?? "");
     if (info.data.status === "graded") setDone(true);
   }, [info.data]);
 
@@ -38,12 +45,12 @@ const GradePage: NextPageWithLayout = () => {
   const loading = info.isLoading || !info.data;
 
   function handleSubmit() {
-    if (CRITERIA.some((c) => !ratings[c.key]) || !lokasiMagang || !posisi || !pembimbing) {
+    if (CRITERIA.some((c) => !ratings[c.key]) || !studentName || !lokasiMagang || !posisi || !pembimbing) {
       setError("Mohon lengkapi semua data dan kriteria"); return;
     }
     setError("");
     submit.mutate(
-      { ratings: ratings as InternshipRatings, lokasiMagang, posisi, pembimbing },
+      { ratings: ratings as InternshipRatings, studentName, lokasiMagang, posisi, pembimbing, phone, tanggal },
       {
         onSuccess: () => setDone(true),
         onError: (e) => {
@@ -67,14 +74,20 @@ const GradePage: NextPageWithLayout = () => {
     <Card maw={560} mx="auto" mt={60} withBorder padding="lg">
       <Stack>
         <Title order={3}>Penilaian Magang</Title>
-        <Text><b>Siswa:</b> {info.data?.studentName}</Text>
         {isDone ? (
           <Alert color="green">Terima kasih. Penilaian telah dikirim.</Alert>
         ) : (
           <>
+            <TextInput label="Nama Siswa" value={studentName} onChange={(e) => setStudentName(e.currentTarget.value)} />
             <TextInput label="Lokasi Magang" value={lokasiMagang} onChange={(e) => setLokasiMagang(e.currentTarget.value)} />
             <TextInput label="Posisi" value={posisi} onChange={(e) => setPosisi(e.currentTarget.value)} />
             <TextInput label="Pembimbing (PIC)" value={pembimbing} onChange={(e) => setPembimbing(e.currentTarget.value)} />
+            <TextInput label="No. Telepon" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
+            <DateInput
+              label="Tanggal"
+              value={tanggal ? new Date(tanggal) : null}
+              onChange={(d) => setTanggal(d ? d.toISOString().slice(0, 10) : "")}
+            />
             {CRITERIA.map((c) => (
               <Select key={c.key} label={c.label} data={RATING_OPTIONS}
                 value={ratings[c.key] ?? null}

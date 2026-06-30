@@ -30,6 +30,7 @@ export interface InternshipRatings {
 }
 export interface Internship {
   id: string; studentId: string; academicYearId: string;
+  studentName?: string;  // denormalized at write time
   lokasiMagang: string; posisi: string; pembimbing: string; phone: string;
   token: string; status: "pending" | "graded";
   ratings: InternshipRatings; nilaiAkhir: number | null; kategori: string | null; tanggal: string;

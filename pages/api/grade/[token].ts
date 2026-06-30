@@ -21,6 +21,8 @@ export default methods({
     return {
       studentName: student?.namaSiswa ?? "",
       lokasiMagang: it.lokasiMagang, posisi: it.posisi, pembimbing: it.pembimbing,
+      phone: it.phone ?? "",
+      tanggal: it.tanggal ?? "",
       status: it.status,
     };
   },
@@ -29,8 +31,8 @@ export default methods({
     const it = await findByToken(token);
     if (!it) throw new ApiError(404, "not found");
     if (it.status === "graded") throw new ApiError(409, "already graded");
-    const { ratings, lokasiMagang, posisi, pembimbing } = (req.body ?? {}) as {
-      ratings: InternshipRatings; lokasiMagang?: string; posisi?: string; pembimbing?: string;
+    const { ratings, studentName, lokasiMagang, posisi, pembimbing, phone, tanggal } = (req.body ?? {}) as {
+      ratings: InternshipRatings; studentName?: string; lokasiMagang?: string; posisi?: string; pembimbing?: string; phone?: string; tanggal?: string;
     };
     let grade;
     try {
@@ -39,9 +41,12 @@ export default methods({
       throw new ApiError(400, "ratings incomplete");
     }
     await repo.update("internships", it.id as string, {
+      studentName: studentName ?? it.studentName ?? "",
       lokasiMagang: lokasiMagang ?? it.lokasiMagang ?? "",
       posisi: posisi ?? it.posisi ?? "",
       pembimbing: pembimbing ?? it.pembimbing ?? "",
+      phone: phone ?? it.phone ?? "",
+      tanggal: tanggal ?? it.tanggal ?? "",
       ratings, nilaiAkhir: grade.nilaiAkhir, kategori: grade.kategori, status: "graded",
     });
     return { ok: true, nilaiAkhir: grade.nilaiAkhir, kategori: grade.kategori };
