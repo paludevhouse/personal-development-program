@@ -75,6 +75,27 @@ if (token) {
   log(g.status, `GET /api/grade/<token> (public)`, JSON.stringify(body).slice(0, 70));
 }
 
+// 6) NEW endpoints: student detail + histories + wawancara CRUD
+const studentsRes = await fetch(`${BASE}/api/students`, { headers: H });
+const studentsList = await studentsRes.json().catch(() => []);
+const sid = Array.isArray(studentsList) && studentsList[0] ? studentsList[0].id : null;
+if (sid) {
+  log((await fetch(`${BASE}/api/students/${sid}`, { headers: H })).status, "GET /api/students/<id> (detail)");
+  const enr = await fetch(`${BASE}/api/enrollments?studentId=${sid}`, { headers: H });
+  const enrBody = await enr.json().catch(() => []);
+  log(enr.status, "GET /api/enrollments?studentId", Array.isArray(enrBody) ? `(${enrBody.length})` : "");
+  const iby = await fetch(`${BASE}/api/internships?studentId=${sid}`, { headers: H });
+  const ibyBody = await iby.json().catch(() => []);
+  log(iby.status, "GET /api/internships?studentId", Array.isArray(ibyBody) ? `(${ibyBody.length})` : "");
+}
+// wawancara list + create + delete
+const wl = await fetch(`${BASE}/api/wawancara`, { headers: H });
+log(wl.status, "GET /api/wawancara");
+const wc = await fetch(`${BASE}/api/wawancara`, { method: "POST", headers: H, body: JSON.stringify({ studentId: sid ?? "x", studentName: "SMOKE", date: new Date().toISOString(), pewawancara: "T", jurusan: "IPA", catatan: "", status: "dijadwalkan" }) });
+const wcBody = await wc.json().catch(() => ({}));
+log(wc.status, "POST /api/wawancara");
+if (wcBody?.id) log((await fetch(`${BASE}/api/wawancara/${wcBody.id}`, { method: "DELETE", headers: H })).status, `DELETE /api/wawancara/${wcBody.id.slice(0,6)}…`);
+
 // summary
 const failed = results.filter((r) => !r.ok);
 console.log(`\n${failed.length === 0 ? "ALL PASS" : failed.length + " FAILED"} — ${results.length} checks`);
