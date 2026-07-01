@@ -6,7 +6,7 @@ const KEY = ["academic-years"];
 
 export function useAcademicYears() {
   const qc = useQueryClient();
-  const data = useQuery<AcademicYear[]>({ queryKey: KEY, queryFn: ({ signal }) => getJson<AcademicYear[]>("/api/academic-years", signal) });
+  const data = useQuery<AcademicYear[]>({ queryKey: KEY, queryFn: ({ signal }) => getJson<AcademicYear[]>("/api/academic-years", signal), staleTime: 30 * 60 * 1000 });
   const invalidate = () => qc.invalidateQueries({ queryKey: KEY });
   const create = useMutation({
     mutationFn: (b: Partial<AcademicYear>) => http.post("/api/academic-years", b).then((r) => r.data),

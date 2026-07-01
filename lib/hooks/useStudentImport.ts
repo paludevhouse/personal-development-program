@@ -15,7 +15,7 @@ export function useStudentImport() {
     meta: { suppressErrorToast: true },
     mutationFn: (payload: {
       academicYearId: string;
-      classId: string;
+      classId?: string;
       students: ParsedStudent[];
     }) =>
       http

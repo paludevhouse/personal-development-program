@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { Button, Group, Select, Stack, Table, Tabs } from "@mantine/core";
+import { Button, Checkbox, Group, Modal, Paper, Select, Stack, Table, Tabs, Text } from "@mantine/core";
 import { MagnifyingGlass, UploadSimple, DownloadSimple, WarningOctagon, UsersThree } from "@phosphor-icons/react";
+import { notifications } from "@mantine/notifications";
 import { PageHeader } from "@/components/PageHeader";
 import { StateView } from "@/components/StateView";
 import { LoadingView } from "@/components/LoadingView";
@@ -11,6 +12,7 @@ import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 import { useUrlParams } from "@/lib/hooks/useUrlParams";
+import { useAssignClass } from "@/lib/hooks/useAssignClass";
 import { StudentStatus } from "@/lib/types";
 import { buildRosterWorkbook } from "@/lib/excel/exportRoster";
 
@@ -26,6 +28,12 @@ export default function StudentsPage() {
   const { query, update } = useStudents({ academicYearId: yearId ?? undefined, classId: classId ?? undefined });
   const { get, set, ready } = useUrlParams();
   const didAutoFetch = useRef(false);
+
+  // Selection state for bulk-assign
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [assignClassId, setAssignClassId] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const assignMut = useAssignClass();
 
   // Initialize filter state from URL once router is ready
   useEffect(() => {
@@ -47,6 +55,48 @@ export default function StudentsPage() {
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
   const rows = (query.data ?? []).filter((s) => statusFilter === "all" ? true : (s.status ?? "aktif") === statusFilter);
+
+  // Clear selection whenever rows change (filter/refetch)
+  useEffect(() => { setSelectedIds(new Set()); }, [query.dataUpdatedAt]);
+
+  const allSelected = rows.length > 0 && rows.every((s) => selectedIds.has(s.id));
+  const someSelected = rows.some((s) => selectedIds.has(s.id));
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(rows.map((s) => s.id)));
+    }
+  }
+
+  function toggleOne(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  const selectedCount = selectedIds.size;
+  const assignClassName = classOptions.find((c) => c.value === assignClassId)?.label ?? "";
+
+  function handleAssign() {
+    if (!yearId || !assignClassId) return;
+    assignMut.mutate(
+      { academicYearId: yearId, classId: assignClassId, studentIds: Array.from(selectedIds) },
+      {
+        onSuccess: (data) => {
+          notifications.show({ color: "green", message: `Berhasil menetapkan ${data.count} siswa ke kelas ${assignClassName}` });
+          setSelectedIds(new Set());
+          setAssignClassId(null);
+          setConfirmOpen(false);
+          query.refetch();
+        },
+        onError: () => { notifications.show({ color: "red", message: "Gagal menetapkan kelas" }); setConfirmOpen(false); },
+      }
+    );
+  }
 
   return (
     <Stack>
@@ -93,6 +143,47 @@ export default function StudentsPage() {
           <Tabs.Tab value="all">Semua</Tabs.Tab>
         </Tabs.List>
       </Tabs>
+
+      {/* Bulk-assign bar */}
+      {selectedCount > 0 && (
+        <Paper withBorder p="sm" radius="md">
+          <Group align="flex-end">
+            <Text size="sm" fw={500}>{selectedCount} siswa dipilih</Text>
+            <Select
+              label="Tetapkan ke Kelas"
+              data={classOptions}
+              value={assignClassId}
+              onChange={setAssignClassId}
+              placeholder="Pilih kelas"
+              style={{ minWidth: 200 }}
+            />
+            <Button
+              disabled={!yearId || !assignClassId}
+              loading={assignMut.isPending}
+              onClick={() => setConfirmOpen(true)}
+            >
+              Terapkan
+            </Button>
+          </Group>
+        </Paper>
+      )}
+
+      {/* Confirm modal */}
+      <Modal
+        opened={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        title="Konfirmasi Penetapan Kelas"
+        centered
+      >
+        <Stack>
+          <Text>Tetapkan {selectedCount} siswa ke kelas <strong>{assignClassName}</strong>?</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setConfirmOpen(false)}>Batal</Button>
+            <Button loading={assignMut.isPending} onClick={handleAssign}>Terapkan</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
       {query.isFetching ? (
         <LoadingView />
       ) : query.isError ? (
@@ -102,14 +193,43 @@ export default function StudentsPage() {
       ) : rows.length === 0 ? (
         <StateView icon={<UsersThree size={44} weight="duotone" />} title="Tidak ada siswa" description="Tidak ada siswa yang cocok dengan filter ini." />
       ) : (
-        <Table.ScrollContainer minWidth={800}>
+        <Table.ScrollContainer minWidth={1000}>
           <Table>
-            <Table.Thead><Table.Tr><Table.Th>Nama</Table.Th><Table.Th>NIS</Table.Th><Table.Th>L/P</Table.Th><Table.Th>Status</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={someSelected && !allSelected}
+                    onChange={toggleAll}
+                    aria-label="Pilih semua"
+                  />
+                </Table.Th>
+                <Table.Th>Nama</Table.Th>
+                <Table.Th>NIS</Table.Th>
+                <Table.Th>Kelas</Table.Th>
+                <Table.Th>L/P</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th />
+              </Table.Tr>
+            </Table.Thead>
             <Table.Tbody>
               {rows.map((s) => (
                 <Table.Tr key={s.id}>
-                  <Table.Td>{s.namaSiswa}</Table.Td><Table.Td>{s.nis}</Table.Td><Table.Td>{s.gender}</Table.Td>
-                  <Table.Td><Select size="xs" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"}]} value={s.status ?? "aktif"} onChange={(v) => v && update.mutate({ ...s, status: v as StudentStatus })} /></Table.Td>
+                  <Table.Td>
+                    <Checkbox
+                      checked={selectedIds.has(s.id)}
+                      onChange={() => toggleOne(s.id)}
+                      aria-label={`Pilih ${s.namaSiswa}`}
+                    />
+                  </Table.Td>
+                  <Table.Td>{s.namaSiswa}</Table.Td>
+                  <Table.Td>{s.nis}</Table.Td>
+                  <Table.Td>{s.className ?? "-"}</Table.Td>
+                  <Table.Td>{s.gender}</Table.Td>
+                  <Table.Td>
+                    <Select size="xs" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"}]} value={s.status ?? "aktif"} onChange={(v) => v && update.mutate({ ...s, status: v as StudentStatus })} />
+                  </Table.Td>
                   <Table.Td><Button component={Link} href={`/students/${s.id}`} size="xs" variant="light">Detail</Button></Table.Td>
                 </Table.Tr>
               ))}

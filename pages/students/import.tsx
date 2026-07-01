@@ -18,7 +18,7 @@ export default function ImportPage() {
   const [parsed, setParsed] = useState<ParsedStudent[]>([]);
   const [results, setResults] = useState<StudentImportResult | null>(null);
   const importMut = useStudentImport();
-  
+
   // Template download modal
   const [opened, { open, close }] = useDisclosure(false);
   const allFields = TEMPLATE_HEADERS["students"];
@@ -37,10 +37,14 @@ export default function ImportPage() {
     setParsed(parseStudentRows(rows));
   }
 
+  // Can confirm if: yearId is set AND (classId is set OR at least one parsed row has a kelas value)
+  const hasRowKelas = parsed.some((s) => !!s.kelas);
+
   function confirm() {
-    if (!yearId || !classId) { notifications.show({ color: "red", message: "Pilih tahun ajaran dan kelas" }); return; }
+    if (!yearId) { notifications.show({ color: "red", message: "Pilih tahun ajaran" }); return; }
+    if (!classId && !hasRowKelas) { notifications.show({ color: "red", message: "Pilih kelas atau pastikan file memiliki kolom Kelas" }); return; }
     importMut.mutate(
-      { academicYearId: yearId, classId, students: parsed },
+      { academicYearId: yearId, classId: classId ?? undefined, students: parsed },
       {
         onSuccess: (data) => {
           setResults(data);
@@ -73,7 +77,7 @@ export default function ImportPage() {
           Unduh Template
         </Button>
       </Group>
-      
+
       <Modal opened={opened} onClose={close} title="Pilih Kolom Templat" centered>
         <Stack>
           <Text size="sm" color="dimmed">Pilih kolom yang ingin disertakan dalam templat Excel.</Text>
@@ -96,16 +100,17 @@ export default function ImportPage() {
           <Text fw={500}>1. Pilih Target Kelas</Text>
           <Group grow>
             <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={(v) => { setYearId(v); setClassId(null); }} placeholder="Pilih tahun ajaran" />
-            <Select label="Kelas" data={classOptions} value={classId} onChange={setClassId} disabled={!yearId} placeholder="Pilih kelas" />
+            <Select label="Kelas (opsional jika file memiliki kolom Kelas)" data={classOptions} value={classId} onChange={setClassId} disabled={!yearId} placeholder="Pilih kelas" clearable />
           </Group>
+          <Text size="xs" c="dimmed">Jika file Excel memiliki kolom &quot;Kelas&quot;, nilai per baris akan menggantikan kelas yang dipilih di atas.</Text>
 
           <Text fw={500} mt="sm">2. Unggah File Data (Excel)</Text>
-          <FileInput 
+          <FileInput
             size="md"
-            label="Pilih atau seret file ke sini" 
+            label="Pilih atau seret file ke sini"
             placeholder="Pilih file .xlsx"
-            accept=".xlsx" 
-            onChange={onFile} 
+            accept=".xlsx"
+            onChange={onFile}
             leftSection={<UploadSimple size={20} />}
             clearable
           />
@@ -117,11 +122,34 @@ export default function ImportPage() {
           <Stack>
             <Text fw={500}>Pratinjau {parsed.length} data siswa:</Text>
             <Table striped highlightOnHover>
-              <Table.Thead><Table.Tr><Table.Th>Nama Lengkap</Table.Th><Table.Th>NIS</Table.Th><Table.Th>L/P</Table.Th></Table.Tr></Table.Thead>
-              <Table.Tbody>{parsed.map((s, i) => (<Table.Tr key={i}><Table.Td>{s.namaSiswa}</Table.Td><Table.Td>{s.nis}</Table.Td><Table.Td>{s.gender}</Table.Td></Table.Tr>))}</Table.Tbody>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Nama Lengkap</Table.Th>
+                  <Table.Th>NIS</Table.Th>
+                  <Table.Th>L/P</Table.Th>
+                  {hasRowKelas && <Table.Th>Kelas</Table.Th>}
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {parsed.map((s, i) => (
+                  <Table.Tr key={i}>
+                    <Table.Td>{s.namaSiswa}</Table.Td>
+                    <Table.Td>{s.nis}</Table.Td>
+                    <Table.Td>{s.gender}</Table.Td>
+                    {hasRowKelas && <Table.Td>{s.kelas ?? "-"}</Table.Td>}
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
             </Table>
             <Center>
-              <Button size="lg" loading={importMut.isPending} onClick={confirm} disabled={!yearId || !classId}>Konfirmasi Impor</Button>
+              <Button
+                size="lg"
+                loading={importMut.isPending}
+                onClick={confirm}
+                disabled={!yearId || (!classId && !hasRowKelas)}
+              >
+                Konfirmasi Impor
+              </Button>
             </Center>
           </Stack>
         </Card>

@@ -2,7 +2,9 @@ import { Gender } from "@/lib/types";
 
 export interface ParsedStudent {
   namaSiswa: string;
-  nis: string; gender: Gender;
+  nis: string;
+  gender: Gender;
+  kelas?: string;
 }
 
 function pick(row: Record<string, unknown>, keys: string[]): string {
@@ -26,10 +28,12 @@ export function parseStudentRows(rows: Record<string, unknown>[]): ParsedStudent
   for (const row of rows) {
     const namaSiswa = pick(row, ["Nama Lengkap", "Nama Siswa", "Nama", "Name"]);
     if (!namaSiswa) continue;
+    const kelasRaw = pick(row, ["Kelas", "Class"]);
     out.push({
       namaSiswa,
       nis: pick(row, ["NIS", "Nomor Induk Sekolah"]),
       gender: parseGender(pick(row, ["Jenis Kelamin", "Gender", "L/P"])),
+      ...(kelasRaw ? { kelas: kelasRaw } : {}),
     });
   }
   return out;

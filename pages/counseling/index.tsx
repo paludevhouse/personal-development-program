@@ -143,7 +143,7 @@ export default function CounselingPage() {
 
   const data = counseling.data;
   const items: Counseling[] = data.data ?? [];
-  const studentOptions = (students.data ?? []).map((s) => ({ value: s.id, label: s.namaSiswa }));
+  const studentOptions = (students.data ?? []).map((s) => ({ value: s.id, label: `${s.namaSiswa} — ${s.nis}${s.className ? " — " + s.className : ""}` }));
 
   // Client-side filtering
   const rows = items.filter((item) => {

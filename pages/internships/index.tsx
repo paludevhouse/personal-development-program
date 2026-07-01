@@ -119,7 +119,7 @@ export default function InternshipsPage() {
   });
 
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
-  const studentOptions = (studentsHook.query.data ?? []).map((s) => ({ value: s.id, label: s.namaSiswa }));
+  const studentOptions = (studentsHook.query.data ?? []).map((s) => ({ value: s.id, label: `${s.namaSiswa} — ${s.nis}${s.className ? " — " + s.className : ""}` }));
   const origin = typeof window !== "undefined" ? window.location.origin : "";
 
   const studentName = (id: string) => (studentsHook.query.data ?? []).find((s) => s.id === id)?.namaSiswa ?? "";

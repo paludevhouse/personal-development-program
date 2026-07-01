@@ -6,7 +6,7 @@ export function useClasses(academicYearId?: string) {
   const qc = useQueryClient();
   const key = ["classes", academicYearId ?? "all"];
   const url = academicYearId ? `/api/classes?academicYearId=${academicYearId}` : "/api/classes";
-  const data = useQuery<SchoolClass[]>({ queryKey: key, queryFn: ({ signal }) => getJson<SchoolClass[]>(url, signal) });
+  const data = useQuery<SchoolClass[]>({ queryKey: key, queryFn: ({ signal }) => getJson<SchoolClass[]>(url, signal), staleTime: 30 * 60 * 1000 });
   const invalidate = () => qc.invalidateQueries({ queryKey: ["classes"] });
   const create = useMutation({ mutationFn: (b: Partial<SchoolClass>) => http.post("/api/classes", b).then((r) => r.data), onSuccess: invalidate });
   const update = useMutation({ mutationFn: (b: SchoolClass) => http.put(`/api/classes/${b.id}`, b).then((r) => r.data), onSuccess: invalidate });

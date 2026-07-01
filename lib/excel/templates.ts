@@ -11,7 +11,7 @@ type TemplateType =
 export const TEMPLATE_HEADERS: Record<TemplateType, string[]> = {
   "academic-years": ["year", "isActive"],
   "classes": ["name", "waliKelas"],
-  "students": ["namaSiswa", "nis", "gender", "status"],
+  "students": ["namaSiswa", "nis", "gender", "status", "kelas"],
   "master-magang": ["perusahaan", "pic", "phone", "alamat"],
   "internships": ["studentId", "lokasiMagang", "posisi", "pembimbing", "phone"],
   "counseling": ["studentId", "date", "category", "notes", "followUp", "status", "counselor"],
@@ -26,6 +26,7 @@ export const FIELD_LABELS: Record<string, string> = {
   "nis": "NIS",
   "gender": "Jenis Kelamin (L/P)",
   "status": "Status Siswa",
+  "kelas": "Kelas",
   "perusahaan": "Nama Perusahaan",
   "pic": "Nama PIC",
   "phone": "No Telepon",
