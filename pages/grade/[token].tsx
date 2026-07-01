@@ -20,6 +20,7 @@ import { DateInput } from "@mantine/dates";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
 import { useGrade, GradeItem } from "@/lib/hooks/useGrade";
+import { useDraftStore } from "@/lib/store/draftStore";
 import type { NextPageWithLayout } from "@/pages/_app";
 
 const RATING_OPTIONS = [
@@ -55,33 +56,26 @@ function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
 
   const draftKey = `grade-draft:${token}:${item.id}`;
 
-  // Restore draft from localStorage on mount (non-graded only)
+  // Restore draft from store on mount (non-graded only)
   useEffect(() => {
     if (item.status === "graded") return;
-    try {
-      const raw = typeof window !== "undefined" ? localStorage.getItem(draftKey) : null;
-      if (raw) {
-        const d = JSON.parse(raw);
-        if (d.studentName != null) setStudentName(d.studentName);
-        if (d.lokasiMagang != null) setLokasiMagang(d.lokasiMagang);
-        if (d.posisi != null) setPosisi(d.posisi);
-        if (d.pembimbing != null) setPembimbing(d.pembimbing);
-        if (d.phone != null) setPhone(d.phone);
-        if (d.tanggal != null) setTanggal(d.tanggal);
-        if (d.ratings) setRatings(d.ratings);
-      }
-    } catch { /* ignore */ }
+    const d = useDraftStore.getState().getDraft(draftKey);
+    if (d) {
+      if (d.studentName != null) setStudentName(d.studentName as string);
+      if (d.lokasiMagang != null) setLokasiMagang(d.lokasiMagang as string);
+      if (d.posisi != null) setPosisi(d.posisi as string);
+      if (d.pembimbing != null) setPembimbing(d.pembimbing as string);
+      if (d.phone != null) setPhone(d.phone as string);
+      if (d.tanggal != null) setTanggal(d.tanggal as string);
+      if (d.ratings) setRatings(d.ratings as Partial<InternshipRatings>);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-save draft to localStorage on change (non-graded only)
+  // Auto-save draft to store on change (non-graded only)
   useEffect(() => {
     if (item.status === "graded") return;
-    try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem(draftKey, JSON.stringify({ studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings }));
-      }
-    } catch { /* ignore quota errors */ }
+    useDraftStore.getState().setDraft(draftKey, { studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings });
   }, [studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings, item.status, draftKey]);
 
   // Re-seed when item changes (e.g. after refetch)
@@ -146,7 +140,7 @@ function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
       },
       {
         onSuccess: () => {
-          try { if (typeof window !== "undefined") localStorage.removeItem(draftKey); } catch {}
+          useDraftStore.getState().clearDraft(draftKey);
           closeConfirm();
           onGraded();
         },
