@@ -9,6 +9,8 @@ import { useInternships } from "@/lib/hooks/useInternships";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 import { useUrlParams } from "@/lib/hooks/useUrlParams";
+import { useStudentList } from "@/lib/hooks/useStudentList";
+import { useEnrollmentsByYear } from "@/lib/hooks/useEnrollmentsByYear";
 import { buildGradesWorkbook } from "@/lib/excel/exportGrades";
 import type { Internship } from "@/lib/types";
 
@@ -25,8 +27,24 @@ export default function LaporanMagang() {
     .filter((y) => y.isActive)
     .map((y) => ({ value: y.id, label: y.year }));
 
+  const selectedYear = allYears.find((y) => y.id === yearId);
+  const academicYear = selectedYear?.year ?? "";
+
   const { data: internshipsQuery } = useInternships(yearId ?? undefined);
   const items: Internship[] = useMemo(() => internshipsQuery.data ?? [], [internshipsQuery.data]);
+
+  const studentList = useStudentList();
+  const enrollmentsByYear = useEnrollmentsByYear(yearId);
+
+  const nisById = useMemo<Record<string, string>>(() => {
+    const students = studentList.data ?? [];
+    return Object.fromEntries(students.map((s) => [s.id, s.nis]));
+  }, [studentList.data]);
+
+  const kelasById = useMemo<Record<string, string>>(() => {
+    const enrollments = enrollmentsByYear.data ?? [];
+    return Object.fromEntries(enrollments.map((e) => [e.studentId, e.className]));
+  }, [enrollmentsByYear.data]);
 
   const stats = useMemo(() => {
     const total = items.length;
@@ -44,7 +62,7 @@ export default function LaporanMagang() {
   }, [items]);
 
   const handleExport = () => {
-    const wb = buildGradesWorkbook(items);
+    const wb = buildGradesWorkbook(items, { academicYear, nisById, kelasById });
     XLSX.writeFile(wb, "nilai-magang.xlsx");
   };
 
