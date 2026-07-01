@@ -78,18 +78,11 @@ function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
     useDraftStore.getState().setDraft(draftKey, { studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings });
   }, [studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings, item.status, draftKey]);
 
-  // Re-seed when item changes (e.g. after refetch)
-  useEffect(() => {
-    setStudentName(item.studentName ?? "");
-    setLokasiMagang(item.lokasiMagang ?? "");
-    setPosisi(item.posisi ?? "");
-    setPembimbing(item.pembimbing ?? "");
-    setPhone(item.phone ?? "");
-    setTanggal(item.tanggal ?? "");
-    if (item.ratings) {
-      setRatings(item.ratings as Partial<InternshipRatings>);
-    }
-  }, [item]);
+  // NOTE: do NOT re-seed from `item` on change — it would overwrite the
+  // restored draft and clobber in-progress input on every refetch. Initial
+  // state comes from the useState initializers above; the draft (if any)
+  // overrides it on mount. Graded items early-return to the read-only view
+  // below regardless of form state.
 
   if (item.status === "graded") {
     return (
