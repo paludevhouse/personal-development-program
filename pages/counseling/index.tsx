@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ActionIcon, Badge, Button, Group, Modal, Select, Stack, Table, Textarea, TextInput, Tooltip } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { ActionIcon, Badge, Button, Group, Modal, Select, Stack, Table, Tabs, Textarea, TextInput, Tooltip } from "@mantine/core";
 import { DateTimePicker } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
@@ -12,6 +12,7 @@ import { StateView } from "@/components/StateView";
 import { LoadingView } from "@/components/LoadingView";
 import { useCounseling } from "@/lib/hooks/useCounseling";
 import { useStudentList } from "@/lib/hooks/useStudentList";
+import { useUrlParams } from "@/lib/hooks/useUrlParams";
 import { counselingSchema } from "@/lib/validation/schemas";
 import { Counseling } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils/date";
@@ -126,6 +127,20 @@ export default function CounselingPage() {
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<string | null>(null);
 
+  const { get, set, ready } = useUrlParams();
+
+  // Initialize filter state from URL once router is ready
+  useEffect(() => {
+    if (!ready) return;
+    const urlStudent = get("student");
+    const urlCategory = get("category");
+    const urlStatus = get("status");
+    if (urlStudent) setFilterStudentId(urlStudent);
+    if (urlCategory) setFilterCategory(urlCategory);
+    if (urlStatus) setFilterStatus(urlStatus);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
   const data = counseling.data;
   const items: Counseling[] = data.data ?? [];
   const studentOptions = (students.data ?? []).map((s) => ({ value: s.id, label: s.namaSiswa }));
@@ -134,7 +149,7 @@ export default function CounselingPage() {
   const rows = items.filter((item) => {
     if (filterStudentId && item.studentId !== filterStudentId) return false;
     if (filterCategory && item.category !== filterCategory) return false;
-    if (filterStatus && item.status !== filterStatus) return false;
+    if (filterStatus && filterStatus !== "all" && item.status !== filterStatus) return false;
     return true;
   });
 
@@ -160,7 +175,7 @@ export default function CounselingPage() {
           label="Filter Siswa"
           data={[{ value: "", label: "Semua Siswa" }, ...studentOptions]}
           value={filterStudentId ?? ""}
-          onChange={(v) => setFilterStudentId(v || null)}
+          onChange={(v) => { setFilterStudentId(v || null); set({ student: v || null }); }}
           searchable
           clearable
           placeholder="Semua Siswa"
@@ -169,14 +184,7 @@ export default function CounselingPage() {
           label="Filter Kategori"
           data={[{ value: "", label: "Semua" }, ...CATEGORY_OPTIONS]}
           value={filterCategory ?? ""}
-          onChange={(v) => setFilterCategory(v || null)}
-          placeholder="Semua"
-        />
-        <Select
-          label="Filter Status"
-          data={[{ value: "", label: "Semua" }, ...STATUS_OPTIONS]}
-          value={filterStatus ?? ""}
-          onChange={(v) => setFilterStatus(v || null)}
+          onChange={(v) => { setFilterCategory(v || null); set({ category: v || null }); }}
           placeholder="Semua"
         />
         <FormModal title="Tambah Konseling">
@@ -221,6 +229,20 @@ export default function CounselingPage() {
         </FormModal>
         <Button component={Link} href="/counseling/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
       </Group>
+      <Tabs
+        value={filterStatus ?? "all"}
+        onChange={(v) => {
+          const s = v ?? "all";
+          setFilterStatus(s === "all" ? null : s);
+          set({ status: s === "all" ? null : s });
+        }}
+      >
+        <Tabs.List>
+          <Tabs.Tab value="open">Open</Tabs.Tab>
+          <Tabs.Tab value="selesai">Selesai</Tabs.Tab>
+          <Tabs.Tab value="all">Semua</Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
       {data.isLoading ? (
         <LoadingView />
       ) : data.isError ? (

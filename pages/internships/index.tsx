@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ActionIcon, Badge, Button, CopyButton, Group, Modal, Select, Stack, Table, TextInput, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
@@ -14,6 +14,7 @@ import { useInternships } from "@/lib/hooks/useInternships";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useStudents } from "@/lib/hooks/useStudents";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
+import { useUrlParams } from "@/lib/hooks/useUrlParams";
 import { useCompanies } from "@/lib/hooks/useCompanies";
 import { useWhatsappTemplate } from "@/lib/hooks/useWhatsappTemplate";
 import { fillTemplate } from "@/lib/contact/fillTemplate";
@@ -92,6 +93,15 @@ export default function InternshipsPage() {
   const [idemKey, setIdemKey] = useState(() => crypto.randomUUID());
   const activeYears = (years.data.data ?? []).filter((y) => y.isActive);
   useDefaultYear(activeYears, yearId, setYearId);
+  const { get, set, ready } = useUrlParams();
+
+  // Initialize yearId from URL once router is ready (overrides useDefaultYear if URL param present)
+  useEffect(() => {
+    if (!ready) return;
+    const urlYear = get("year");
+    if (urlYear) setYearId(urlYear);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
   const { data, create, update, remove } = useInternships(yearId ?? undefined);
   const studentsHook = useStudents({ academicYearId: yearId ?? undefined });
   const [studentId, setStudentId] = useState<string | null>(null);
@@ -118,7 +128,7 @@ export default function InternshipsPage() {
     <Stack>
       <PageHeader />
       <Group align="end">
-        <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
+        <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={(v) => { setYearId(v); set({ year: v ?? null }); }} />
         <Button variant="light" onClick={() => studentsHook.query.refetch()} leftSection={<Users size={16} weight="bold" />}>Muat Siswa</Button>
         <FormModal title="Tambah Penempatan" buttonLabel="Tambah Penempatan">
           {(close) => (

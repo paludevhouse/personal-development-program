@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import * as XLSX from "xlsx";
-import { Button, Group, Select, Stack, Table } from "@mantine/core";
+import { Button, Group, Select, Stack, Table, Tabs } from "@mantine/core";
 import { MagnifyingGlass, UploadSimple, DownloadSimple, WarningOctagon, UsersThree } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/PageHeader";
 import { StateView } from "@/components/StateView";
@@ -10,6 +10,7 @@ import { useStudents } from "@/lib/hooks/useStudents";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
+import { useUrlParams } from "@/lib/hooks/useUrlParams";
 import { StudentStatus } from "@/lib/types";
 import { buildRosterWorkbook } from "@/lib/excel/exportRoster";
 
@@ -23,6 +24,25 @@ export default function StudentsPage() {
   const [classId, setClassId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string>("aktif");
   const { query, update } = useStudents({ academicYearId: yearId ?? undefined, classId: classId ?? undefined });
+  const { get, set, ready } = useUrlParams();
+  const didAutoFetch = useRef(false);
+
+  // Initialize filter state from URL once router is ready
+  useEffect(() => {
+    if (!ready) return;
+    const urlYear = get("year");
+    const urlClass = get("class");
+    const urlStatus = get("status");
+    if (urlYear) setYearId(urlYear);
+    if (urlClass) setClassId(urlClass);
+    if (urlStatus) setStatusFilter(urlStatus);
+    // Auto-refetch once if filters are present in the URL
+    if (!didAutoFetch.current && (urlYear || urlClass)) {
+      didAutoFetch.current = true;
+      setTimeout(() => query.refetch(), 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
 
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
@@ -36,11 +56,43 @@ export default function StudentsPage() {
         <Button variant="light" disabled={!(query.data?.length)} onClick={() => XLSX.writeFile(buildRosterWorkbook(query.data ?? []), "daftar-siswa.xlsx")} leftSection={<DownloadSimple size={16} weight="bold" />}>Ekspor Excel</Button>
       </Group>
       <Group align="end">
-        <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={(v) => { setYearId(v); setClassId(null); }} clearable />
-        <Select label="Kelas" data={classOptions} value={classId} onChange={setClassId} clearable />
-        <Select label="Status" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"},{value:"all",label:"Semua"}]} value={statusFilter} onChange={(v) => setStatusFilter(v ?? "aktif")} />
-        <Button onClick={() => query.refetch()} loading={query.isFetching} leftSection={<MagnifyingGlass size={16} weight="bold" />}>Cari</Button>
+        <Select
+          label="Tahun Ajaran"
+          data={yearOptions}
+          value={yearId}
+          onChange={(v) => { setYearId(v); setClassId(null); set({ year: v ?? null, class: null }); }}
+          clearable
+        />
+        <Select
+          label="Kelas"
+          data={classOptions}
+          value={classId}
+          onChange={(v) => { setClassId(v); set({ class: v ?? null }); }}
+          clearable
+        />
+        <Button
+          onClick={() => { set({ year: yearId ?? null, class: classId ?? null, status: statusFilter }); query.refetch(); }}
+          loading={query.isFetching}
+          leftSection={<MagnifyingGlass size={16} weight="bold" />}
+        >
+          Cari
+        </Button>
       </Group>
+      <Tabs
+        value={statusFilter}
+        onChange={(v) => {
+          const s = v ?? "aktif";
+          setStatusFilter(s);
+          set({ status: s });
+        }}
+      >
+        <Tabs.List>
+          <Tabs.Tab value="aktif">Aktif</Tabs.Tab>
+          <Tabs.Tab value="lulus">Lulus</Tabs.Tab>
+          <Tabs.Tab value="pindah">Pindah</Tabs.Tab>
+          <Tabs.Tab value="all">Semua</Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
       {query.isFetching ? (
         <LoadingView />
       ) : query.isError ? (

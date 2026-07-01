@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { z } from "zod";
 import { Button, Group, Select, Stack, Table, TextInput, Modal, ActionIcon, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
@@ -12,6 +12,7 @@ import { LoadingView } from "@/components/LoadingView";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
+import { useUrlParams } from "@/lib/hooks/useUrlParams";
 import { FormModal } from "@/components/FormModal";
 import { SchoolClass } from "@/lib/types";
 
@@ -27,6 +28,16 @@ export default function ClassesPage() {
   const yearsList = years.data.data ?? [];
   const activeYears = yearsList.filter((y) => y.isActive);
   useDefaultYear(activeYears, yearId, setYearId);
+  const { get, set, ready } = useUrlParams();
+
+  // Initialize yearId from URL once router is ready (overrides useDefaultYear if URL param present)
+  useEffect(() => {
+    if (!ready) return;
+    const urlYear = get("year");
+    if (urlYear) setYearId(urlYear);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready]);
+
   const { data, create, update, remove } = useClasses(yearId ?? undefined);
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const form = useForm({
@@ -38,7 +49,7 @@ export default function ClassesPage() {
     <Stack>
       <PageHeader />
       <Group align="end">
-        <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={setYearId} />
+        <Select label="Tahun Ajaran" data={yearOptions} value={yearId} onChange={(v) => { setYearId(v); set({ year: v ?? null }); }} />
         <FormModal title="Tambah Kelas">
           {(close, { loading, setLoading }) => (
             <form onSubmit={form.onSubmit((values) => {
