@@ -7,8 +7,11 @@ import {
   Badge,
   Button,
   Card,
+  Checkbox,
+  Divider,
   Group,
   Modal,
+  Paper,
   Select,
   Stack,
   Text,
@@ -16,6 +19,7 @@ import {
   Title,
 } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
+import { notifications } from "@mantine/notifications";
 import { DateInput } from "@mantine/dates";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
@@ -205,6 +209,181 @@ function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
   );
 }
 
+interface MassGradingPanelProps {
+  items: GradeItem[];
+  submit: ReturnType<typeof useGrade>["submit"];
+  onDone: () => void;
+}
+
+function MassGradingPanel({ items, submit, onDone }: MassGradingPanelProps) {
+  const pendingItems = items.filter((i) => i.status !== "graded");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [massRatings, setMassRatings] = useState<Partial<InternshipRatings>>({});
+  const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const allSelected =
+    pendingItems.length > 0 && selectedIds.length === pendingItems.length;
+  const someSelected = selectedIds.length > 0 && !allSelected;
+
+  const allCriteriaFilled = CRITERIA.every((c) => !!massRatings[c.key]);
+  const canSubmit = selectedIds.length > 0 && allCriteriaFilled;
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(pendingItems.map((i) => i.id));
+    }
+  }
+
+  function toggleItem(id: string) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  }
+
+  function handleSubmitClick() {
+    if (!canSubmit) return;
+    setError("");
+    openConfirm();
+  }
+
+  async function handleConfirm() {
+    closeConfirm();
+    setLoading(true);
+    let successCount = 0;
+
+    // Look up items by id at submit time from the prop (server data)
+    const selectedItems = items.filter((i) => selectedIds.includes(i.id));
+
+    for (const item of selectedItems) {
+      try {
+        await submit.mutateAsync({
+          internshipId: item.id,
+          ratings: massRatings as InternshipRatings,
+          studentName: item.studentName,
+          lokasiMagang: item.lokasiMagang,
+          posisi: item.posisi,
+          pembimbing: item.pembimbing,
+          phone: item.phone,
+          tanggal: item.tanggal,
+        });
+        successCount++;
+      } catch (e) {
+        // Skip 409 (already graded) — treat as success for counting purposes
+        if (axios.isAxiosError(e) && e.response?.status === 409) {
+          successCount++;
+        }
+        // Other errors: skip this student and continue
+      }
+    }
+
+    setLoading(false);
+    await onDone();
+    setSelectedIds([]);
+    setMassRatings({});
+    notifications.show({
+      color: "green",
+      title: "Penilaian Massal Berhasil",
+      message: `Berhasil menilai ${successCount} siswa`,
+    });
+  }
+
+  if (pendingItems.length === 0) return null;
+
+  return (
+    <>
+      <Modal
+        opened={confirmOpened}
+        onClose={closeConfirm}
+        title="Konfirmasi Penilaian Massal"
+        centered
+      >
+        <Stack gap="md">
+          <Text size="sm">
+            Menilai <strong>{selectedIds.length} siswa</strong> dengan nilai yang sama.
+            Setelah dikirim tidak dapat diubah.
+          </Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={closeConfirm}>
+              Batal
+            </Button>
+            <Button color="blue" loading={loading} onClick={handleConfirm}>
+              Kirim Semua
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      <Paper withBorder p="md" radius="md">
+        <Stack gap="md">
+          <Title order={5}>Penilaian Massal (Beberapa Siswa)</Title>
+          <Text size="sm" c="dimmed">
+            Pilih siswa yang belum dinilai, isi 7 kriteria sekali, lalu kirim untuk semua sekaligus.
+          </Text>
+
+          <Divider label="Pilih Siswa" labelPosition="left" />
+
+          <Stack gap="xs">
+            <Checkbox
+              label="Pilih semua"
+              checked={allSelected}
+              indeterminate={someSelected}
+              onChange={toggleSelectAll}
+              fw={500}
+            />
+            {pendingItems.map((item) => (
+              <Checkbox
+                key={item.id}
+                label={item.studentName || "(Nama belum diisi)"}
+                checked={selectedIds.includes(item.id)}
+                onChange={() => toggleItem(item.id)}
+                pl="md"
+              />
+            ))}
+          </Stack>
+
+          <Divider label="Kriteria Penilaian" labelPosition="left" />
+
+          <Stack gap="sm">
+            {CRITERIA.map((c) => (
+              <Select
+                key={c.key}
+                label={c.label}
+                data={RATING_OPTIONS}
+                value={massRatings[c.key] ?? null}
+                onChange={(v) =>
+                  setMassRatings((p) => ({ ...p, [c.key]: v as Rating }))
+                }
+              />
+            ))}
+          </Stack>
+
+          {!allCriteriaFilled && selectedIds.length > 0 && (
+            <Text size="sm" c="orange">
+              Lengkapi semua 7 kriteria penilaian sebelum mengirim.
+            </Text>
+          )}
+
+          {error && <Text size="sm" c="red">{error}</Text>}
+
+          <Group justify="flex-end">
+            <Button
+              disabled={!canSubmit}
+              loading={loading}
+              onClick={handleSubmitClick}
+            >
+              Kirim Penilaian Terpilih ({selectedIds.length} siswa)
+            </Button>
+          </Group>
+        </Stack>
+      </Paper>
+    </>
+  );
+}
+
 const GradePage: NextPageWithLayout = () => {
   const router = useRouter();
   const token = router.query.token as string | undefined;
@@ -244,6 +423,12 @@ const GradePage: NextPageWithLayout = () => {
             Semua siswa sudah dinilai. Terima kasih.
           </Alert>
         )}
+
+        <MassGradingPanel
+          items={items}
+          submit={submit}
+          onDone={info.refetch}
+        />
 
         <Accordion variant="separated" mt="sm">
           {items.map((item) => (
