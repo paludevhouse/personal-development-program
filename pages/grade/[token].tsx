@@ -39,9 +39,10 @@ interface GradeStudentProps {
   item: GradeItem;
   submit: ReturnType<typeof useGrade>["submit"];
   onGraded: () => void;
+  token: string;
 }
 
-function GradeStudent({ item, submit, onGraded }: GradeStudentProps) {
+function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
   const [ratings, setRatings] = useState<Partial<InternshipRatings>>({});
   const [studentName, setStudentName] = useState(item.studentName ?? "");
   const [lokasiMagang, setLokasiMagang] = useState(item.lokasiMagang ?? "");
@@ -51,6 +52,37 @@ function GradeStudent({ item, submit, onGraded }: GradeStudentProps) {
   const [tanggal, setTanggal] = useState(item.tanggal ?? "");
   const [error, setError] = useState("");
   const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+
+  const draftKey = `grade-draft:${token}:${item.id}`;
+
+  // Restore draft from localStorage on mount (non-graded only)
+  useEffect(() => {
+    if (item.status === "graded") return;
+    try {
+      const raw = typeof window !== "undefined" ? localStorage.getItem(draftKey) : null;
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d.studentName != null) setStudentName(d.studentName);
+        if (d.lokasiMagang != null) setLokasiMagang(d.lokasiMagang);
+        if (d.posisi != null) setPosisi(d.posisi);
+        if (d.pembimbing != null) setPembimbing(d.pembimbing);
+        if (d.phone != null) setPhone(d.phone);
+        if (d.tanggal != null) setTanggal(d.tanggal);
+        if (d.ratings) setRatings(d.ratings);
+      }
+    } catch { /* ignore */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-save draft to localStorage on change (non-graded only)
+  useEffect(() => {
+    if (item.status === "graded") return;
+    try {
+      if (typeof window !== "undefined") {
+        localStorage.setItem(draftKey, JSON.stringify({ studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings }));
+      }
+    } catch { /* ignore quota errors */ }
+  }, [studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings, item.status, draftKey]);
 
   // Re-seed when item changes (e.g. after refetch)
   useEffect(() => {
@@ -114,6 +146,7 @@ function GradeStudent({ item, submit, onGraded }: GradeStudentProps) {
       },
       {
         onSuccess: () => {
+          try { if (typeof window !== "undefined") localStorage.removeItem(draftKey); } catch {}
           closeConfirm();
           onGraded();
         },
@@ -243,6 +276,7 @@ const GradePage: NextPageWithLayout = () => {
                   item={item}
                   submit={submit}
                   onGraded={() => info.refetch()}
+                  token={token ?? ""}
                 />
               </Accordion.Panel>
             </Accordion.Item>
