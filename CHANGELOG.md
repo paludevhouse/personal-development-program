@@ -1,3 +1,13 @@
+# [1.2.0](https://github.com/paludevhouse/personal-development-program/compare/v1.1.0...v1.2.0) (2026-07-01)
+
+
+### Features
+
+* class-binding UI (Kelas column, bulk-assign, per-row-class import) + Nama-NIS-Kelas labels + staleTime ([745f8bc](https://github.com/paludevhouse/personal-development-program/commit/745f8bcc2532494bf91ff850a97c87dc0299d1f0))
+* denormalize current class on student + bulk-assign endpoint + N+1 read fixes ([0e4da5a](https://github.com/paludevhouse/personal-development-program/commit/0e4da5a39d75fc222e70ed344e8664d30e81565b))
+* import templates with dropdown (data-validation) columns via exceljs ([598f546](https://github.com/paludevhouse/personal-development-program/commit/598f546a01137675e83e719c580ca14d87445c6b))
+* student Firestore doc id = NIS + FK re-key migration script ([69d4151](https://github.com/paludevhouse/personal-development-program/commit/69d4151823fc2e750fc1c667b2dfaee0fa21aca8))
+
 # [1.1.0](https://github.com/paludevhouse/personal-development-program/compare/v1.0.3...v1.1.0) (2026-07-01)
 
 
