@@ -250,41 +250,43 @@ export default function CounselingPage() {
       ) : rows.length === 0 ? (
         <StateView icon={<ChatCircleText size={44} weight="duotone" />} title="Belum ada konseling" description="Tambah catatan konseling untuk memulai riwayat bimbingan siswa." />
       ) : (
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Tanggal</Table.Th>
-              <Table.Th>Siswa</Table.Th>
-              <Table.Th>Kategori</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Catatan</Table.Th>
-              <Table.Th />
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {rows.map((row) => (
-              <Table.Tr key={row.id}>
-                <Table.Td>{formatDateTime(row.date)}</Table.Td>
-                <Table.Td>{row.studentName}</Table.Td>
-                <Table.Td>{row.category}</Table.Td>
-                <Table.Td>
-                  <Badge color={row.status === "selesai" ? "green" : "gray"}>
-                    {row.status === "selesai" ? "Selesai" : "Open"}
-                  </Badge>
-                </Table.Td>
-                <Table.Td style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {row.notes}
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <EditCounseling row={row} studentOptions={studentOptions} onSave={(v) => counseling.update.mutate(v)} />
-                    <Button size="xs" color="red" variant="light" onClick={() => counseling.remove.mutate(row.id)}>Hapus</Button>
-                  </Group>
-                </Table.Td>
+        <Table.ScrollContainer minWidth={700}>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Tanggal</Table.Th>
+                <Table.Th>Siswa</Table.Th>
+                <Table.Th>Kategori</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>Catatan</Table.Th>
+                <Table.Th />
               </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+            </Table.Thead>
+            <Table.Tbody>
+              {rows.map((row) => (
+                <Table.Tr key={row.id}>
+                  <Table.Td>{formatDateTime(row.date)}</Table.Td>
+                  <Table.Td>{row.studentName}</Table.Td>
+                  <Table.Td>{row.category}</Table.Td>
+                  <Table.Td>
+                    <Badge color={row.status === "selesai" ? "green" : "gray"}>
+                      {row.status === "selesai" ? "Selesai" : "Open"}
+                    </Badge>
+                  </Table.Td>
+                  <Table.Td style={{ maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {row.notes}
+                  </Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <EditCounseling row={row} studentOptions={studentOptions} onSave={(v) => counseling.update.mutate(v)} />
+                      <Button size="xs" color="red" variant="light" onClick={() => counseling.remove.mutate(row.id)}>Hapus</Button>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
     </Stack>
   );

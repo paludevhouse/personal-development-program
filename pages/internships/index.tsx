@@ -169,53 +169,55 @@ export default function InternshipsPage() {
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<Briefcase size={44} weight="duotone" />} title="Belum ada data" description="Pilih tahun ajaran lalu tambah penempatan magang." />
       ) : (
-        <Table>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Lokasi</Table.Th>
-              <Table.Th>Posisi</Table.Th>
-              <Table.Th>Status</Table.Th>
-              <Table.Th>Nilai</Table.Th>
-              <Table.Th>Kategori</Table.Th>
-              <Table.Th>Link PIC</Table.Th>
-              <Table.Th>WA</Table.Th>
-              <Table.Th />
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {(data.data ?? []).map((it) => {
-              const link = `${origin}/grade/${it.token}`;
-              const wl = waLink(it.phone ?? "");
-              const text = encodeURIComponent(fillTemplate(template, { pic: it.pembimbing, siswa: studentName(it.studentId), perusahaan: it.lokasiMagang, link: `${origin}/grade/${it.token}` }));
-              const waHref = wl ? `${wl}?text=${text}` : undefined;
-              return (
-                <Table.Tr key={it.id}>
-                  <Table.Td>{it.lokasiMagang}</Table.Td>
-                  <Table.Td>{it.posisi}</Table.Td>
-                  <Table.Td><Badge color={it.status === "graded" ? "green" : "gray"}>{it.status === "graded" ? "Dinilai" : "Menunggu"}</Badge></Table.Td>
-                  <Table.Td>{it.nilaiAkhir != null ? it.nilaiAkhir.toFixed(2) : "-"}</Table.Td>
-                  <Table.Td>{it.kategori ?? "-"}</Table.Td>
-                  <Table.Td>
-                    <CopyButton value={link}>{({ copied, copy }) => <Button size="xs" variant="light" onClick={copy} leftSection={<LinkSimple size={14} weight="bold" />}>{copied ? "Tersalin" : "Salin Link"}</Button>}</CopyButton>
-                  </Table.Td>
-                  <Table.Td>
-                    <Tooltip label={wl ? "Kirim link penilaian via WhatsApp" : "Nomor PIC belum diisi"}>
-                      <ActionIcon color="green" variant="light" disabled={!wl} component="a" href={waHref} target="_blank" rel="noopener noreferrer">
-                        <WhatsappLogo size={18} weight="fill" />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <EditInternship it={it} companyOptions={companyOptions} companyList={companyList} onSave={(v) => update.mutate(v)} />
-                      <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(it.id)}>Hapus</Button>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={800}>
+          <Table>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>Lokasi</Table.Th>
+                <Table.Th>Posisi</Table.Th>
+                <Table.Th>Status</Table.Th>
+                <Table.Th>Nilai</Table.Th>
+                <Table.Th>Kategori</Table.Th>
+                <Table.Th>Link PIC</Table.Th>
+                <Table.Th>WA</Table.Th>
+                <Table.Th />
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {(data.data ?? []).map((it) => {
+                const link = `${origin}/grade/${it.token}`;
+                const wl = waLink(it.phone ?? "");
+                const text = encodeURIComponent(fillTemplate(template, { pic: it.pembimbing, siswa: studentName(it.studentId), perusahaan: it.lokasiMagang, link: `${origin}/grade/${it.token}` }));
+                const waHref = wl ? `${wl}?text=${text}` : undefined;
+                return (
+                  <Table.Tr key={it.id}>
+                    <Table.Td>{it.lokasiMagang}</Table.Td>
+                    <Table.Td>{it.posisi}</Table.Td>
+                    <Table.Td><Badge color={it.status === "graded" ? "green" : "gray"}>{it.status === "graded" ? "Dinilai" : "Menunggu"}</Badge></Table.Td>
+                    <Table.Td>{it.nilaiAkhir != null ? it.nilaiAkhir.toFixed(2) : "-"}</Table.Td>
+                    <Table.Td>{it.kategori ?? "-"}</Table.Td>
+                    <Table.Td>
+                      <CopyButton value={link}>{({ copied, copy }) => <Button size="xs" variant="light" onClick={copy} leftSection={<LinkSimple size={14} weight="bold" />}>{copied ? "Tersalin" : "Salin Link"}</Button>}</CopyButton>
+                    </Table.Td>
+                    <Table.Td>
+                      <Tooltip label={wl ? "Kirim link penilaian via WhatsApp" : "Nomor PIC belum diisi"}>
+                        <ActionIcon color="green" variant="light" disabled={!wl} component="a" href={waHref} target="_blank" rel="noopener noreferrer">
+                          <WhatsappLogo size={18} weight="fill" />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <EditInternship it={it} companyOptions={companyOptions} companyList={companyList} onSave={(v) => update.mutate(v)} />
+                        <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(it.id)}>Hapus</Button>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
     </Stack>
   );

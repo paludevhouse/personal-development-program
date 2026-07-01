@@ -58,32 +58,34 @@ export default function MasterMagangPage() {
       ) : (companies.length === 0 && !data.isLoading) ? (
         <StateView icon={<Buildings size={44} weight="duotone" />} title="Belum ada data" description="Tambah perusahaan untuk membangun master data." />
       ) : (
-        <Table>
-          <Table.Thead><Table.Tr><Table.Th>Perusahaan</Table.Th><Table.Th>PIC</Table.Th><Table.Th>No. Telepon</Table.Th><Table.Th>Alamat</Table.Th><Table.Th>WhatsApp</Table.Th><Table.Th /></Table.Tr></Table.Thead>
-          <Table.Tbody>
-            {companies.map((c) => {
-              const wa = waLink(c.phone);
-              const text = encodeURIComponent(fillTemplate(template, { pic: c.pic, perusahaan: c.perusahaan }));
-              const waHref = wa ? `${wa}?text=${text}` : undefined;
-              return (
-                <Table.Tr key={c.id}>
-                  <Table.Td>{c.perusahaan}</Table.Td><Table.Td>{c.pic}</Table.Td><Table.Td>{c.phone}</Table.Td><Table.Td>{c.alamat}</Table.Td>
-                  <Table.Td>
-                    <Tooltip label={wa ? "Chat WhatsApp" : "Nomor tidak valid"}>
-                      <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={waHref ?? undefined} target="_blank" rel="noopener noreferrer"><WhatsappLogo size={18} weight="fill" /></ActionIcon>
-                    </Tooltip>
-                  </Table.Td>
-                  <Table.Td>
-                    <Group gap="xs">
-                      <EditCompany company={c} onSave={(v) => update.mutate(v)} />
-                      <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button>
-                    </Group>
-                  </Table.Td>
-                </Table.Tr>
-              );
-            })}
-          </Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={700}>
+          <Table>
+            <Table.Thead><Table.Tr><Table.Th>Perusahaan</Table.Th><Table.Th>PIC</Table.Th><Table.Th>No. Telepon</Table.Th><Table.Th>Alamat</Table.Th><Table.Th>WhatsApp</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+            <Table.Tbody>
+              {companies.map((c) => {
+                const wa = waLink(c.phone);
+                const text = encodeURIComponent(fillTemplate(template, { pic: c.pic, perusahaan: c.perusahaan }));
+                const waHref = wa ? `${wa}?text=${text}` : undefined;
+                return (
+                  <Table.Tr key={c.id}>
+                    <Table.Td>{c.perusahaan}</Table.Td><Table.Td>{c.pic}</Table.Td><Table.Td>{c.phone}</Table.Td><Table.Td>{c.alamat}</Table.Td>
+                    <Table.Td>
+                      <Tooltip label={wa ? "Chat WhatsApp" : "Nomor tidak valid"}>
+                        <ActionIcon color="green" variant="light" disabled={!wa} component="a" href={waHref ?? undefined} target="_blank" rel="noopener noreferrer"><WhatsappLogo size={18} weight="fill" /></ActionIcon>
+                      </Tooltip>
+                    </Table.Td>
+                    <Table.Td>
+                      <Group gap="xs">
+                        <EditCompany company={c} onSave={(v) => update.mutate(v)} />
+                        <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(c.id)}>Hapus</Button>
+                      </Group>
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              })}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
     </Stack>
   );

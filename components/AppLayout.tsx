@@ -1,4 +1,4 @@
-import { AppShell, NavLink, Title, Group, Box, Paper, Button, Text, Burger, Divider } from "@mantine/core";
+import { AppShell, NavLink, Title, Group, Box, Paper, Button, Text, Burger, Divider, Anchor } from "@mantine/core";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useDisclosure } from "@mantine/hooks";
@@ -103,6 +103,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             ))}
           </Box>
         ))}
+        <Text size="xs" c="dimmed" mt="md" ta="center">
+          Dibuat oleh{" "}
+          <Anchor href="https://paludevhouse.site" target="_blank" rel="noopener noreferrer" size="xs">Palu Dev House</Anchor>
+        </Text>
       </AppShell.Navbar>
       <AppShell.Main style={{ backgroundColor: "#f3f6f7" }}>
         <Paper p="lg" shadow="sm" radius="md" withBorder>

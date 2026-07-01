@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useRouter } from "next/router";
-import { Button, Card, PasswordInput, TextInput, Title, Stack } from "@mantine/core";
+import { Anchor, Button, Card, PasswordInput, Text, TextInput, Title, Stack } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
 import { useLogin } from "@/lib/hooks/useLogin";
 import type { NextPageWithLayout } from "@/pages/_app";
@@ -29,6 +29,9 @@ const LoginPage: NextPageWithLayout = () => {
         <TextInput label="Email" value={email} onChange={(e) => setEmail(e.currentTarget.value)} />
         <PasswordInput label="Kata Sandi" value={password} onChange={(e) => setPassword(e.currentTarget.value)} />
         <Button loading={login.isPending} onClick={submit}>Masuk</Button>
+        <Text size="xs" c="dimmed" ta="center">
+          Dibuat oleh <Anchor href="https://paludevhouse.site" target="_blank" rel="noopener noreferrer" size="xs">Palu Dev House</Anchor>
+        </Text>
       </Stack>
     </Card>
   );

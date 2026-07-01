@@ -54,22 +54,24 @@ export default function AcademicYearsPage() {
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<CalendarBlank size={44} weight="duotone" />} title="Belum ada data" description="Tambah tahun ajaran untuk memulai." />
       ) : (
-        <Table>
-          <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
-          <Table.Tbody>
-            {(data.data ?? []).map((y) => (
-              <Table.Tr key={y.id}>
-                <Table.Td>{y.year}</Table.Td><Table.Td>{y.isActive ? "Ya" : "Tidak"}</Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <EditYear year={y} onSave={(v) => update.mutate(v)} />
-                    <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(y.id)}>Hapus</Button>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
+        <Table.ScrollContainer minWidth={500}>
+          <Table>
+            <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
+            <Table.Tbody>
+              {(data.data ?? []).map((y) => (
+                <Table.Tr key={y.id}>
+                  <Table.Td>{y.year}</Table.Td><Table.Td>{y.isActive ? "Ya" : "Tidak"}</Table.Td>
+                  <Table.Td>
+                    <Group gap="xs">
+                      <EditYear year={y} onSave={(v) => update.mutate(v)} />
+                      <Button size="xs" color="red" variant="light" onClick={() => remove.mutate(y.id)}>Hapus</Button>
+                    </Group>
+                  </Table.Td>
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </Table.ScrollContainer>
       )}
     </Stack>
   );
