@@ -250,7 +250,7 @@ export default function CounselingPage() {
       ) : rows.length === 0 ? (
         <StateView icon={<ChatCircleText size={44} weight="duotone" />} title="Belum ada konseling" description="Tambah catatan konseling untuk memulai riwayat bimbingan siswa." />
       ) : (
-        <Table.ScrollContainer minWidth={700}>
+        <Table.ScrollContainer minWidth={950}>
           <Table>
             <Table.Thead>
               <Table.Tr>

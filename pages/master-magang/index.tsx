@@ -58,7 +58,7 @@ export default function MasterMagangPage() {
       ) : (companies.length === 0 && !data.isLoading) ? (
         <StateView icon={<Buildings size={44} weight="duotone" />} title="Belum ada data" description="Tambah perusahaan untuk membangun master data." />
       ) : (
-        <Table.ScrollContainer minWidth={700}>
+        <Table.ScrollContainer minWidth={950}>
           <Table>
             <Table.Thead><Table.Tr><Table.Th>Perusahaan</Table.Th><Table.Th>PIC</Table.Th><Table.Th>No. Telepon</Table.Th><Table.Th>Alamat</Table.Th><Table.Th>WhatsApp</Table.Th><Table.Th /></Table.Tr></Table.Thead>
             <Table.Tbody>

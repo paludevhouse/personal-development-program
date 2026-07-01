@@ -102,7 +102,7 @@ export default function StudentsPage() {
       ) : rows.length === 0 ? (
         <StateView icon={<UsersThree size={44} weight="duotone" />} title="Tidak ada siswa" description="Tidak ada siswa yang cocok dengan filter ini." />
       ) : (
-        <Table.ScrollContainer minWidth={500}>
+        <Table.ScrollContainer minWidth={800}>
           <Table>
             <Table.Thead><Table.Tr><Table.Th>Nama</Table.Th><Table.Th>NIS</Table.Th><Table.Th>L/P</Table.Th><Table.Th>Status</Table.Th><Table.Th /></Table.Tr></Table.Thead>
             <Table.Tbody>
