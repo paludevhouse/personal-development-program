@@ -8,6 +8,7 @@ function mockRes() {
   res.status = vi.fn((c: number) => { (res as any).statusCode = c; return res; }) as any;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   res.json = vi.fn((b: unknown) => { (res as any).body = b; (res as any).headersSent = true; return res; }) as any;
+  res.setHeader = vi.fn() as any; // eslint-disable-line @typescript-eslint/no-explicit-any
   return res as NextApiResponse & { statusCode: number; body?: unknown };
 }
 const req = (method: string) => ({ method } as NextApiRequest);

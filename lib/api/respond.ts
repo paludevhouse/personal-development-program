@@ -9,6 +9,7 @@ type Handler = (req: NextApiRequest, res: NextApiResponse) => Promise<unknown>;
 
 export function methods(map: Partial<Record<Method, Handler>>): NextApiHandler {
   return async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
     const fn = map[(req.method ?? "GET") as Method];
     if (!fn) { res.status(405).json({ error: "method not allowed" }); return; }
     try {

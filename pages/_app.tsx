@@ -39,7 +39,15 @@ export default function App({ Component, pageProps }: AppProps & { Component: Ne
         notifications.show({ color: "red", title: s ? `Gagal (${s})` : "Gagal", message: getErrorMessage(error) });
       },
     }),
-    defaultOptions: { queries: { retry: 1 } },
+    defaultOptions: {
+      queries: {
+        retry: 1,
+        staleTime: 5 * 60_000,
+        gcTime: 10 * 60_000,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+      },
+    },
   }));
   const { pathname } = useRouter();
   const meta = routeMeta(pathname);
