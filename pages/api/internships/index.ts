@@ -13,6 +13,8 @@ export default methods({
   GET: async (req) => {
     await requireAdmin(req);
     const yearId = req.query.academicYearId as string | undefined;
+    const studentId = req.query.studentId as string | undefined;
+    if (studentId) return repo.list("internships", [["studentId", studentId]]);
     return repo.list("internships", yearId ? [["academicYearId", yearId]] : []);
   },
   POST: async (req) => {

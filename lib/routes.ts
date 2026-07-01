@@ -6,6 +6,7 @@ export interface RouteMeta {
 export const ROUTES: Record<string, RouteMeta> = {
   "/": { title: "Dasbor", description: "Ringkasan data manajemen" },
   "/students": { title: "Siswa", description: "Kelola data siswa dan status" },
+  "/students/[id]": { title: "Detail Siswa", description: "Riwayat kelas, magang, konseling, wawancara" },
   "/classes": { title: "Kelas", description: "Kelola kelas per tahun ajaran" },
   "/academic-years": { title: "Tahun Ajaran", description: "Kelola tahun ajaran" },
   "/internships": { title: "Magang", description: "Penempatan dan penilaian magang siswa" },

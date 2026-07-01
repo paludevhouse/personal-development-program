@@ -12,3 +12,11 @@ export function useInternships(academicYearId?: string) {
   const remove = useMutation({ mutationFn: (id: string) => http.delete(`/api/internships/${id}`).then((r) => r.data), onSuccess: invalidate });
   return { data, create, update, remove };
 }
+
+export function useStudentInternships(studentId?: string) {
+  return useQuery<Internship[]>({
+    queryKey: ["internships", "student", studentId],
+    queryFn: ({ signal }) => getJson<Internship[]>(`/api/internships?studentId=${studentId}`, signal),
+    enabled: !!studentId,
+  });
+}

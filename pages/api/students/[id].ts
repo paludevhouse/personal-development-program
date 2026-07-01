@@ -1,8 +1,14 @@
-import { methods } from "@/lib/api/respond";
+import { methods, ApiError } from "@/lib/api/respond";
 import { repo } from "@/lib/db/repo";
 import { requireAdmin } from "@/lib/auth/session";
 
 export default methods({
+  GET: async (req) => {
+    await requireAdmin(req);
+    const s = await repo.get("students", req.query.id as string);
+    if (!s) throw new ApiError(404, "not found");
+    return s;
+  },
   PUT: async (req) => {
     await requireAdmin(req);
     const b = req.body ?? {};
