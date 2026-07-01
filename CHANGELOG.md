@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/paludevhouse/personal-development-program/compare/v1.0.1...v1.0.2) (2026-07-01)
+
+
+### Bug Fixes
+
+* downgrade firebase-admin to v12 (jose@4 CJS) to fix ERR_REQUIRE_ESM on serverless ([d01b0df](https://github.com/paludevhouse/personal-development-program/commit/d01b0dfac0eb7480fb2031c5c8eb96b6c9c2ee26))
+
 ## [1.0.1](https://github.com/paludevhouse/personal-development-program/compare/v1.0.0...v1.0.1) (2026-07-01)
 
 
