@@ -7,15 +7,25 @@ export default methods({
     await requireAdmin(req);
     const classId = req.query.classId as string | undefined;
     const academicYearId = req.query.academicYearId as string | undefined;
+
     if (classId || academicYearId) {
+      // Try direct query on denormalized fields first (O(1) reads)
       const filters: [string, unknown][] = [];
       if (classId) filters.push(["classId", classId]);
       if (academicYearId) filters.push(["academicYearId", academicYearId]);
-      const enrollments = await repo.list("enrollments", filters);
+      const direct = await repo.list("students", filters);
+      if (direct.length > 0) return direct;
+
+      // Fallback: enrollment-join path for students not yet backfilled
+      const enrollmentFilters: [string, unknown][] = [];
+      if (classId) enrollmentFilters.push(["classId", classId]);
+      if (academicYearId) enrollmentFilters.push(["academicYearId", academicYearId]);
+      const enrollments = await repo.list("enrollments", enrollmentFilters);
       const ids = Array.from(new Set(enrollments.map((e) => e.studentId as string)));
       const students = await Promise.all(ids.map((id) => repo.get("students", id)));
       return students.filter(Boolean);
     }
+
     return repo.list("students");
   },
   POST: async (req) => {

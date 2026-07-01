@@ -5,8 +5,8 @@ export interface Company { id: string; perusahaan: string; pic: string; phone: s
 
 export interface AcademicYear { id: string; year: string; isActive: boolean; idempotencyKey?: string; }
 export interface SchoolClass { id: string; name: string; academicYearId: string; waliKelas: string; idempotencyKey?: string; }
-export interface Student { id: string; namaSiswa: string; nis: string; gender: Gender; status: StudentStatus; }
-export interface Enrollment { id: string; studentId: string; classId: string; academicYearId: string; }
+export interface Student { id: string; namaSiswa: string; nis: string; gender: Gender; status: StudentStatus; classId?: string; className?: string; academicYearId?: string; }
+export interface Enrollment { id: string; studentId: string; classId: string; academicYearId: string; className?: string; }
 
 export type CounselingCategory = "Akademik" | "Pribadi" | "Sosial" | "Karir";
 export interface Counseling {
