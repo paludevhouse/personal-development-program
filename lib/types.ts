@@ -22,6 +22,19 @@ export interface Counseling {
   idempotencyKey?: string;
 }
 
+export type WawancaraStatus = "dijadwalkan" | "selesai";
+export interface Wawancara {
+  id: string;
+  studentId: string;
+  studentName: string;   // denormalized at write time (from selected student)
+  date: string;          // ISO datetime
+  pewawancara: string;   // interviewer
+  jurusan: string;       // recommended major/track (result)
+  catatan: string;       // notes
+  status: WawancaraStatus;
+  idempotencyKey?: string;
+}
+
 export type Rating = "A" | "B" | "C";
 export interface InternshipRatings {
   kedisiplinan: Rating | null; kerjasama: Rating | null; inisiatif: Rating | null;

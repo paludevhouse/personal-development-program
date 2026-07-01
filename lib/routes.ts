@@ -11,6 +11,7 @@ export const ROUTES: Record<string, RouteMeta> = {
   "/internships": { title: "Magang", description: "Penempatan dan penilaian magang siswa" },
   "/master-magang": { title: "Master Magang", description: "Data perusahaan, PIC, dan kontak" },
   "/counseling": { title: "Konseling", description: "Riwayat dan catatan konseling siswa" },
+  "/wawancara": { title: "Wawancara Penjurusan", description: "Wawancara penjurusan siswa" },
   "/settings": { title: "Pengaturan", description: "Template pesan WhatsApp" },
   "/account": { title: "Akun", description: "Kelola akun dan kata sandi" },
   "/login": { title: "Masuk" },
