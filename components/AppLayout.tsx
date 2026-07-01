@@ -2,7 +2,7 @@ import { AppShell, NavLink, Title, Group, Box, Paper, Button, Text, Burger, Divi
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useDisclosure } from "@mantine/hooks";
-import { House, Student, Chalkboard, CalendarBlank, Briefcase, Buildings, Gear, ChatCircleText, Notebook, SignOut, UserCircle } from "@phosphor-icons/react";
+import { House, Student, Chalkboard, CalendarBlank, Briefcase, Buildings, Gear, ChatCircleText, Notebook, SignOut, UserCircle, FileArrowDown } from "@phosphor-icons/react";
 import { useLogout } from "@/lib/hooks/useLogout";
 
 const NAV_SECTIONS = [
@@ -27,6 +27,7 @@ const NAV_SECTIONS = [
       { href: "/counseling", label: "Konseling", Icon: ChatCircleText },
       { href: "/wawancara", label: "Wawancara Penjurusan", Icon: Notebook },
       { href: "/internships", label: "Magang", Icon: Briefcase },
+      { href: "/laporan-magang", label: "Laporan Magang", Icon: FileArrowDown },
     ],
   },
   {
