@@ -2,6 +2,7 @@ import { methods, ApiError } from "@/lib/api/respond";
 import { repo } from "@/lib/db/repo";
 import { requireAdmin } from "@/lib/auth/session";
 import { academicYearSchema, parseOrThrow } from "@/lib/validation/schemas";
+import { deactivateOthers } from "@/lib/db/academicYears";
 
 export default methods({
   GET: async (req) => {
@@ -14,6 +15,8 @@ export default methods({
     let input;
     try { input = parseOrThrow(academicYearSchema, req.body ?? {}); }
     catch (e) { throw new ApiError(400, (e as Error).message); }
-    return repo.createWithKey("academicYears", { ...input }, key);
+    const created = await repo.createWithKey("academicYears", { ...input }, key);
+    if (input.isActive) await deactivateOthers(created.id);
+    return created;
   },
 });
