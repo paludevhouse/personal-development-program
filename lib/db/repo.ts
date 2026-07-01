@@ -29,6 +29,13 @@ export const repo = {
     await getDb().collection(col).doc(id).delete();
     return { ok: true };
   },
+  async createWithId(col: string, id: string, data: Record<string, unknown>) {
+    const ref = getDb().collection(col).doc(id);
+    const snap = await ref.get();
+    if (snap.exists) throw new Error("exists");
+    await ref.set(data);
+    return { id, ...data };
+  },
   async createWithKey(col: string, data: Record<string, unknown>, key?: string) {
     if (key) {
       const existing = await repo.list(col, [["idempotencyKey", key]]);

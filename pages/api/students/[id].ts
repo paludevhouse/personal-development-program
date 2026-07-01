@@ -12,10 +12,12 @@ export default methods({
   PUT: async (req) => {
     await requireAdmin(req);
     const b = req.body ?? {};
+    const id = req.query.id as string;
     const allowed = ["aktif", "lulus", "pindah"];
-    return repo.update("students", req.query.id as string, {
+    // NIS is the doc id — it cannot be changed via PUT; normalise it back to the param
+    return repo.update("students", id, {
       namaSiswa: b.namaSiswa, namaBesar: b.namaBesar, namaPendek: b.namaPendek,
-      nis: b.nis, nisn: b.nisn, gender: b.gender === "P" ? "P" : "L",
+      nis: id, nisn: b.nisn, gender: b.gender === "P" ? "P" : "L",
       status: allowed.includes(b.status) ? b.status : "aktif",
     });
   },

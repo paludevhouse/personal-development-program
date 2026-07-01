@@ -1,4 +1,4 @@
-import { methods } from "@/lib/api/respond";
+import { methods, ApiError } from "@/lib/api/respond";
 import { repo } from "@/lib/db/repo";
 import { requireAdmin } from "@/lib/auth/session";
 
@@ -31,10 +31,21 @@ export default methods({
   POST: async (req) => {
     await requireAdmin(req);
     const b = req.body ?? {};
-    return repo.create("students", {
+    const nis = String(b.nis ?? "").trim();
+    if (!nis) throw new ApiError(400, "NIS wajib diisi");
+    const data: Record<string, unknown> = {
       namaSiswa: b.namaSiswa, namaBesar: b.namaBesar ?? b.namaSiswa?.toUpperCase() ?? "",
-      namaPendek: b.namaPendek ?? "", nis: b.nis ?? "", nisn: b.nisn ?? "", gender: b.gender === "P" ? "P" : "L",
+      namaPendek: b.namaPendek ?? "", nis, nisn: b.nisn ?? "", gender: b.gender === "P" ? "P" : "L",
       status: b.status ?? "aktif",
-    });
+    };
+    if (b.classId !== undefined) data.classId = b.classId;
+    if (b.className !== undefined) data.className = b.className;
+    if (b.academicYearId !== undefined) data.academicYearId = b.academicYearId;
+    try {
+      return await repo.createWithId("students", nis, data);
+    } catch (e) {
+      if (e instanceof Error && e.message === "exists") throw new ApiError(409, "NIS sudah terdaftar");
+      throw e;
+    }
   },
 });
