@@ -8,7 +8,8 @@ import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useClasses } from "@/lib/hooks/useClasses";
 import { useStudentImport, StudentImportResult } from "@/lib/hooks/useStudentImport";
 import { parseStudentRows, ParsedStudent } from "@/lib/excel/parseStudents";
-import { downloadTemplate, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { downloadTemplateXlsx } from "@/lib/excel/templateXlsx";
 
 export default function ImportPage() {
   const years = useAcademicYears();
@@ -64,8 +65,12 @@ export default function ImportPage() {
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const classOptions = (classes.data?.data ?? []).map((c) => ({ value: c.id, label: c.name }));
 
-  function handleDownloadTemplate() {
-    downloadTemplate("students", selectedFields);
+  async function handleDownloadTemplate() {
+    const klassList = (classes.data?.data ?? []).map((c) => c.name);
+    await downloadTemplateXlsx("students", {
+      selectedFields,
+      lists: { kelas: klassList },
+    });
     close();
   }
 

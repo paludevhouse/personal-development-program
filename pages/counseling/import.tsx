@@ -4,10 +4,12 @@ import { Button, FileInput, Group, Stack, Table, Title, Text, Badge, Modal, Chec
 import { DownloadSimple, UploadSimple } from "@phosphor-icons/react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
-import { downloadTemplate, parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { downloadTemplateXlsx } from "@/lib/excel/templateXlsx";
 import { Counseling } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { useStudentList } from "@/lib/hooks/useStudentList";
 
 function useCounselingImport() {
   const queryClient = useQueryClient();
@@ -42,6 +44,7 @@ function useCounselingImport() {
 }
 
 export default function ImportCounselingPage() {
+  const studentList = useStudentList();
   const [parsed, setParsed] = useState<Omit<Counseling, "id" | "studentName">[]>([]);
   const [results, setResults] = useState<{ success: Omit<Counseling, "id" | "studentName">[]; failed: { row: Omit<Counseling, "id" | "studentName">; error: string }[] } | null>(null);
   const importMut = useCounselingImport();
@@ -104,8 +107,12 @@ export default function ImportCounselingPage() {
     });
   }
 
-  function handleDownloadTemplate() {
-    downloadTemplate("counseling", selectedFields);
+  async function handleDownloadTemplate() {
+    const nisList = (studentList.data ?? []).map((s) => s.nis);
+    await downloadTemplateXlsx("counseling", {
+      selectedFields,
+      lists: { nis: nisList },
+    });
     close();
   }
 

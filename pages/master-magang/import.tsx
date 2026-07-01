@@ -4,7 +4,8 @@ import { Button, FileInput, Group, Stack, Table, Title, Text, Modal, Checkbox, C
 import { DownloadSimple, UploadSimple } from "@phosphor-icons/react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
-import { downloadTemplate, parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { downloadTemplateXlsx } from "@/lib/excel/templateXlsx";
 import { Company } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -91,8 +92,8 @@ export default function ImportCompaniesPage() {
     });
   }
 
-  function handleDownloadTemplate() {
-    downloadTemplate("master-magang", selectedFields);
+  async function handleDownloadTemplate() {
+    await downloadTemplateXlsx("master-magang", { selectedFields });
     close();
   }
 

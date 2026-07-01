@@ -4,7 +4,8 @@ import { Button, FileInput, Group, Stack, Table, Title, Text, Modal, Checkbox, C
 import { DownloadSimple, UploadSimple } from "@phosphor-icons/react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
-import { downloadTemplate, parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { downloadTemplateXlsx } from "@/lib/excel/templateXlsx";
 import { AcademicYear } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -88,8 +89,8 @@ export default function ImportAcademicYearsPage() {
     });
   }
 
-  function handleDownloadTemplate() {
-    downloadTemplate("academic-years", selectedFields);
+  async function handleDownloadTemplate() {
+    await downloadTemplateXlsx("academic-years", { selectedFields });
     close();
   }
 

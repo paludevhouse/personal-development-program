@@ -4,10 +4,13 @@ import { Button, FileInput, Group, Stack, Table, Title, Text, Select, Modal, Che
 import { DownloadSimple, UploadSimple } from "@phosphor-icons/react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
-import { downloadTemplate, parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
+import { downloadTemplateXlsx } from "@/lib/excel/templateXlsx";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
+import { useStudentList } from "@/lib/hooks/useStudentList";
+import { useCompanies } from "@/lib/hooks/useCompanies";
 
 interface ParsedInternship {
   studentId: string;
@@ -51,6 +54,8 @@ function useInternshipImport() {
 export default function ImportInternshipsPage() {
   const years = useAcademicYears();
   const [yearId, setYearId] = useState<string | null>(null);
+  const studentList = useStudentList();
+  const companies = useCompanies();
   const [parsed, setParsed] = useState<ParsedInternship[]>([]);
   const [results, setResults] = useState<{ success: ParsedInternship[]; failed: { row: ParsedInternship; error: string }[] } | null>(null);
   const importMut = useInternshipImport();
@@ -107,8 +112,13 @@ export default function ImportInternshipsPage() {
     });
   }
 
-  function handleDownloadTemplate() {
-    downloadTemplate("internships", selectedFields);
+  async function handleDownloadTemplate() {
+    const nisList = (studentList.data ?? []).map((s) => s.nis);
+    const lokasiList = (companies.data.data ?? []).map((c) => c.perusahaan);
+    await downloadTemplateXlsx("internships", {
+      selectedFields,
+      lists: { nis: nisList, lokasi: lokasiList },
+    });
     close();
   }
 
