@@ -1,3 +1,17 @@
+# [1.1.0](https://github.com/paludevhouse/personal-development-program/compare/v1.0.3...v1.1.0) (2026-07-01)
+
+
+### Features
+
+* grade export title (date + academic year) + NIS and Kelas columns ([8d60156](https://github.com/paludevhouse/personal-development-program/commit/8d601567d2ec3f89632664927eb4fe782fab60ef))
+* mass grading on grade page (select students + shared criteria + single submit) ([44f2d81](https://github.com/paludevhouse/personal-development-program/commit/44f2d811d8c2e39c55e0cb88b3753bf22d1e3020))
+* responsive grade page (desktop table w/ criteria columns, mobile cards) ([0c08f5e](https://github.com/paludevhouse/personal-development-program/commit/0c08f5ee01f0ab2f7d4597887d2052e7df8edf76))
+
+
+### Performance Improvements
+
+* long-lived Cache-Control for rarely-changing static assets ([909993f](https://github.com/paludevhouse/personal-development-program/commit/909993fff2c49686c7e6424d365b8447b35392db))
+
 ## [1.0.3](https://github.com/paludevhouse/personal-development-program/compare/v1.0.2...v1.0.3) (2026-07-01)
 
 
