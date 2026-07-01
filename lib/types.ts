@@ -13,7 +13,7 @@ export interface Counseling {
   id: string;
   studentId: string;
   studentName: string;   // denormalized at write time
-  date: string;          // YYYY-MM-DD
+  date: string;          // ISO datetime string
   category: CounselingCategory;
   notes: string;
   followUp: string;

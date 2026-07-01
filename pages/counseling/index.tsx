@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ActionIcon, Badge, Button, Group, Modal, Select, Stack, Table, Textarea, TextInput, Tooltip } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import { DateTimePicker } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import { useForm } from "@mantine/form";
 import { zodResolver } from "mantine-form-zod-resolver";
@@ -14,6 +14,7 @@ import { useCounseling } from "@/lib/hooks/useCounseling";
 import { useStudentList } from "@/lib/hooks/useStudentList";
 import { counselingSchema } from "@/lib/validation/schemas";
 import { Counseling } from "@/lib/types";
+import { formatDateTime } from "@/lib/utils/date";
 import { z } from "zod";
 
 type CounselingFormValues = z.infer<typeof counselingSchema>;
@@ -93,10 +94,12 @@ function EditCounseling({ row, studentOptions, onSave }: EditCounselingProps) {
                 form.setValues({ ...form.values, studentId: val ?? "", studentName: label });
               }}
             />
-            <TextInput
-              label="Tanggal"
-              placeholder="YYYY-MM-DD"
-              {...form.getInputProps("date")}
+            <DateTimePicker
+              label="Tanggal & Waktu"
+              placeholder="Pilih tanggal dan waktu"
+              value={(() => { const d = new Date(form.values.date); return form.values.date && !isNaN(d.getTime()) ? d : null; })()}
+              onChange={(d) => form.setFieldValue("date", d ? d.toISOString() : "")}
+              error={form.errors.date}
             />
             <Select label="Kategori" data={CATEGORY_OPTIONS} {...form.getInputProps("category")} />
             <Textarea label="Catatan" {...form.getInputProps("notes")} />
@@ -199,11 +202,11 @@ export default function CounselingPage() {
                     form.setValues({ ...form.values, studentId: val ?? "", studentName: label });
                   }}
                 />
-                <DateInput
-                  label="Tanggal"
-                  placeholder="Pilih tanggal"
-                  value={form.values.date ? new Date(form.values.date) : null}
-                  onChange={(val) => form.setFieldValue("date", val ? val.toISOString().slice(0, 10) : "")}
+                <DateTimePicker
+                  label="Tanggal & Waktu"
+                  placeholder="Pilih tanggal dan waktu"
+                  value={(() => { const d = new Date(form.values.date); return form.values.date && !isNaN(d.getTime()) ? d : null; })()}
+                  onChange={(val) => form.setFieldValue("date", val ? val.toISOString() : "")}
                   error={form.errors.date}
                 />
                 <Select label="Kategori" data={CATEGORY_OPTIONS} {...form.getInputProps("category")} />
@@ -239,7 +242,7 @@ export default function CounselingPage() {
           <Table.Tbody>
             {rows.map((row) => (
               <Table.Tr key={row.id}>
-                <Table.Td>{row.date}</Table.Td>
+                <Table.Td>{formatDateTime(row.date)}</Table.Td>
                 <Table.Td>{row.studentName}</Table.Td>
                 <Table.Td>{row.category}</Table.Td>
                 <Table.Td>
