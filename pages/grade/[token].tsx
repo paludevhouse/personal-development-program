@@ -2,25 +2,30 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import {
-  Accordion,
+  ActionIcon,
   Alert,
   Badge,
   Button,
   Card,
   Checkbox,
+  Collapse,
   Divider,
   Group,
   Modal,
   Paper,
   Select,
+  SimpleGrid,
   Stack,
+  Table,
   Text,
   TextInput,
   Title,
+  Tooltip,
 } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { DateInput } from "@mantine/dates";
+import { CaretDown, CaretUp } from "@phosphor-icons/react";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
 import { useGrade, GradeItem } from "@/lib/hooks/useGrade";
@@ -28,6 +33,13 @@ import { useDraftStore } from "@/lib/store/draftStore";
 import type { NextPageWithLayout } from "@/pages/_app";
 
 const RATING_OPTIONS = [
+  { value: "A", label: "A" },
+  { value: "B", label: "B" },
+  { value: "C", label: "C" },
+];
+
+/** Full label options for mobile cards */
+const RATING_OPTIONS_FULL = [
   { value: "A", label: "A (Sangat Baik)" },
   { value: "B", label: "B (Baik)" },
   { value: "C", label: "C (Cukup)" },
@@ -45,9 +57,16 @@ interface GradeStudentProps {
   submit: ReturnType<typeof useGrade>["submit"];
   onGraded: () => void;
   token: string;
+  mode: "card" | "row";
 }
 
-function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
+/** Shared logic hook extracted so both card and table-row renderers can use it */
+function useStudentGradeState(
+  item: GradeItem,
+  token: string,
+  submit: ReturnType<typeof useGrade>["submit"],
+  onGraded: () => void
+) {
   const [ratings, setRatings] = useState<Partial<InternshipRatings>>({});
   const [studentName, setStudentName] = useState(item.studentName ?? "");
   const [lokasiMagang, setLokasiMagang] = useState(item.lokasiMagang ?? "");
@@ -87,17 +106,6 @@ function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
   // state comes from the useState initializers above; the draft (if any)
   // overrides it on mount. Graded items early-return to the read-only view
   // below regardless of form state.
-
-  if (item.status === "graded") {
-    return (
-      <Stack gap="xs" p="xs">
-        <Badge color="green" size="lg">Sudah dinilai</Badge>
-        <Text size="sm"><strong>Nama:</strong> {item.studentName}</Text>
-        <Text size="sm"><strong>Nilai Akhir:</strong> {item.nilaiAkhir?.toFixed(2) ?? "-"}</Text>
-        <Text size="sm"><strong>Kategori:</strong> {item.kategori ?? "-"}</Text>
-      </Stack>
-    );
-  }
 
   function validate(): string {
     const missing: string[] = [];
@@ -154,59 +162,243 @@ function GradeStudent({ item, submit, onGraded, token }: GradeStudentProps) {
     );
   }
 
-  return (
-    <>
-      <Modal
-        opened={confirmOpened}
-        onClose={closeConfirm}
-        title="Konfirmasi Penilaian"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
-            Pastikan semua data dan nilai sudah benar. Setelah dikirim, penilaian{" "}
-            <strong>tidak dapat diubah</strong> lagi.
-          </Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={closeConfirm}>
-              Batal
-            </Button>
-            <Button loading={submit.isPending} onClick={handleConfirm}>
-              Kirim
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+  return {
+    ratings, setRatings,
+    studentName, setStudentName,
+    lokasiMagang, setLokasiMagang,
+    posisi, setPosisi,
+    pembimbing, setPembimbing,
+    phone, setPhone,
+    tanggal, setTanggal,
+    error,
+    confirmOpened, openConfirm, closeConfirm,
+    handleSubmitClick, handleConfirm,
+  };
+}
 
-      <Stack gap="sm" p="xs">
-        <TextInput label="Nama Siswa" value={studentName} onChange={(e) => setStudentName(e.currentTarget.value)} />
-        <TextInput label="Lokasi Magang" value={lokasiMagang} onChange={(e) => setLokasiMagang(e.currentTarget.value)} />
-        <TextInput label="Posisi" value={posisi} onChange={(e) => setPosisi(e.currentTarget.value)} />
-        <TextInput label="Pembimbing (PIC)" value={pembimbing} onChange={(e) => setPembimbing(e.currentTarget.value)} />
-        <TextInput label="No. Telepon" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} />
-        <DateInput
-          label="Tanggal"
-          value={toDate(tanggal)}
-          onChange={(d) => setTanggal(d ? d.toISOString().slice(0, 10) : "")}
-        />
-        {CRITERIA.map((c) => (
-          <Select
-            key={c.key}
-            label={c.label}
-            data={RATING_OPTIONS}
-            value={ratings[c.key] ?? null}
-            onChange={(v) => setRatings((p) => ({ ...p, [c.key]: v as Rating }))}
-          />
-        ))}
-        {error && <Text c="red" size="sm">{error}</Text>}
+/** Placement fields shared between card and table-row detail panel */
+function PlacementFields({
+  studentName, setStudentName,
+  lokasiMagang, setLokasiMagang,
+  posisi, setPosisi,
+  pembimbing, setPembimbing,
+  phone, setPhone,
+  tanggal, setTanggal,
+}: {
+  studentName: string; setStudentName: (v: string) => void;
+  lokasiMagang: string; setLokasiMagang: (v: string) => void;
+  posisi: string; setPosisi: (v: string) => void;
+  pembimbing: string; setPembimbing: (v: string) => void;
+  phone: string; setPhone: (v: string) => void;
+  tanggal: string; setTanggal: (v: string) => void;
+}) {
+  return (
+    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+      <TextInput label="Nama Siswa" value={studentName} onChange={(e) => setStudentName(e.currentTarget.value)} size="sm" />
+      <TextInput label="Lokasi Magang" value={lokasiMagang} onChange={(e) => setLokasiMagang(e.currentTarget.value)} size="sm" />
+      <TextInput label="Posisi" value={posisi} onChange={(e) => setPosisi(e.currentTarget.value)} size="sm" />
+      <TextInput label="Pembimbing (PIC)" value={pembimbing} onChange={(e) => setPembimbing(e.currentTarget.value)} size="sm" />
+      <TextInput label="No. Telepon" value={phone} onChange={(e) => setPhone(e.currentTarget.value)} size="sm" />
+      <DateInput
+        label="Tanggal"
+        value={toDate(tanggal)}
+        onChange={(d) => setTanggal(d ? d.toISOString().slice(0, 10) : "")}
+        size="sm"
+      />
+    </SimpleGrid>
+  );
+}
+
+/** Confirm modal shared */
+function ConfirmModal({
+  opened, onClose, onConfirm, loading,
+}: {
+  opened: boolean; onClose: () => void; onConfirm: () => void; loading: boolean;
+}) {
+  return (
+    <Modal opened={opened} onClose={onClose} title="Konfirmasi Penilaian" centered>
+      <Stack gap="md">
+        <Text size="sm">
+          Pastikan semua data dan nilai sudah benar. Setelah dikirim, penilaian{" "}
+          <strong>tidak dapat diubah</strong> lagi.
+        </Text>
         <Group justify="flex-end">
-          <Button onClick={handleSubmitClick}>
-            Kirim Penilaian
-          </Button>
+          <Button variant="default" onClick={onClose}>Batal</Button>
+          <Button loading={loading} onClick={onConfirm}>Kirim</Button>
         </Group>
       </Stack>
+    </Modal>
+  );
+}
+
+/** Mobile card renderer for one student */
+function GradeStudentCard({ item, submit, onGraded, token }: Omit<GradeStudentProps, "mode">) {
+  const s = useStudentGradeState(item, token, submit, onGraded);
+
+  if (item.status === "graded") {
+    return (
+      <Card withBorder radius="md" p="sm">
+        <Group justify="space-between" mb="xs">
+          <Text fw={600}>{item.studentName || "(Nama belum diisi)"}</Text>
+          <Badge color="green" size="sm">Sudah Dinilai</Badge>
+        </Group>
+        <Text size="sm"><strong>Nilai Akhir:</strong> {item.nilaiAkhir?.toFixed(2) ?? "-"}</Text>
+        <Text size="sm"><strong>Kategori:</strong> {item.kategori ?? "-"}</Text>
+      </Card>
+    );
+  }
+
+  return (
+    <>
+      <ConfirmModal
+        opened={s.confirmOpened}
+        onClose={s.closeConfirm}
+        onConfirm={s.handleConfirm}
+        loading={submit.isPending}
+      />
+      <Card withBorder radius="md" p="sm">
+        <Group justify="space-between" mb="sm">
+          <Text fw={600}>{item.studentName || "(Nama belum diisi)"}</Text>
+          <Badge color="orange" size="sm">Belum Dinilai</Badge>
+        </Group>
+        <Stack gap="xs">
+          <PlacementFields
+            studentName={s.studentName} setStudentName={s.setStudentName}
+            lokasiMagang={s.lokasiMagang} setLokasiMagang={s.setLokasiMagang}
+            posisi={s.posisi} setPosisi={s.setPosisi}
+            pembimbing={s.pembimbing} setPembimbing={s.setPembimbing}
+            phone={s.phone} setPhone={s.setPhone}
+            tanggal={s.tanggal} setTanggal={s.setTanggal}
+          />
+          <Divider label="Kriteria Penilaian" labelPosition="left" mt="xs" />
+          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+            {CRITERIA.map((c) => (
+              <Select
+                key={c.key}
+                label={c.label}
+                data={RATING_OPTIONS_FULL}
+                value={s.ratings[c.key] ?? null}
+                onChange={(v) => s.setRatings((p) => ({ ...p, [c.key]: v as Rating }))}
+                size="sm"
+              />
+            ))}
+          </SimpleGrid>
+          {s.error && <Text c="red" size="sm">{s.error}</Text>}
+          <Group justify="flex-end">
+            <Button size="sm" onClick={s.handleSubmitClick}>Kirim Penilaian</Button>
+          </Group>
+        </Stack>
+      </Card>
     </>
   );
+}
+
+/** Desktop table row renderer for one student — includes criteria Selects + expandable placement detail */
+function GradeStudentTableRow({ item, submit, onGraded, token }: Omit<GradeStudentProps, "mode">) {
+  const s = useStudentGradeState(item, token, submit, onGraded);
+  const [detailOpened, { toggle: toggleDetail }] = useDisclosure(false);
+
+  if (item.status === "graded") {
+    return (
+      <>
+        <Table.Tr style={{ backgroundColor: "var(--mantine-color-green-0)" }}>
+          <Table.Td>
+            <Text size="sm" fw={500}>{item.studentName || "(Nama belum diisi)"}</Text>
+          </Table.Td>
+          {CRITERIA.map((c) => (
+            <Table.Td key={c.key} ta="center">
+              <Text size="sm" c="dimmed">-</Text>
+            </Table.Td>
+          ))}
+          <Table.Td>
+            <Badge color="green" size="sm">Sudah Dinilai</Badge>
+          </Table.Td>
+          <Table.Td ta="center">
+            <Text size="xs" c="dimmed">
+              {item.nilaiAkhir?.toFixed(2) ?? "-"}
+            </Text>
+          </Table.Td>
+        </Table.Tr>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <ConfirmModal
+        opened={s.confirmOpened}
+        onClose={s.closeConfirm}
+        onConfirm={s.handleConfirm}
+        loading={submit.isPending}
+      />
+      <Table.Tr>
+        <Table.Td style={{ minWidth: 140 }}>
+          <Stack gap={4}>
+            <Text size="sm" fw={500}>{item.studentName || "(Nama belum diisi)"}</Text>
+            <Tooltip label={detailOpened ? "Sembunyikan detail" : "Edit data penempatan"} withArrow>
+              <ActionIcon
+                variant="subtle"
+                size="xs"
+                color="gray"
+                onClick={toggleDetail}
+                aria-label="Toggle detail"
+              >
+                {detailOpened ? <CaretUp size={14} /> : <CaretDown size={14} />}
+              </ActionIcon>
+            </Tooltip>
+          </Stack>
+        </Table.Td>
+        {CRITERIA.map((c) => (
+          <Table.Td key={c.key} style={{ minWidth: 72 }}>
+            <Select
+              data={RATING_OPTIONS}
+              value={s.ratings[c.key] ?? null}
+              onChange={(v) => s.setRatings((p) => ({ ...p, [c.key]: v as Rating }))}
+              size="xs"
+              styles={{ input: { textAlign: "center", paddingLeft: 4, paddingRight: 20 } }}
+              aria-label={c.label}
+            />
+          </Table.Td>
+        ))}
+        <Table.Td>
+          <Badge color="orange" size="sm">Belum</Badge>
+        </Table.Td>
+        <Table.Td style={{ minWidth: 90 }}>
+          <Stack gap={4}>
+            <Button size="xs" onClick={s.handleSubmitClick}>Kirim</Button>
+            {s.error && (
+              <Text c="red" size="xs" style={{ maxWidth: 90 }}>{s.error}</Text>
+            )}
+          </Stack>
+        </Table.Td>
+      </Table.Tr>
+      {/* Detail expand row for placement fields */}
+      <Table.Tr style={{ padding: 0 }}>
+        <Table.Td colSpan={CRITERIA.length + 3} style={{ padding: 0, border: "none" }}>
+          <Collapse in={detailOpened}>
+            <Paper p="sm" m="xs" withBorder radius="sm">
+              <Text size="xs" fw={600} mb="xs" c="dimmed">Data Penempatan</Text>
+              <PlacementFields
+                studentName={s.studentName} setStudentName={s.setStudentName}
+                lokasiMagang={s.lokasiMagang} setLokasiMagang={s.setLokasiMagang}
+                posisi={s.posisi} setPosisi={s.setPosisi}
+                pembimbing={s.pembimbing} setPembimbing={s.setPembimbing}
+                phone={s.phone} setPhone={s.setPhone}
+                tanggal={s.tanggal} setTanggal={s.setTanggal}
+              />
+            </Paper>
+          </Collapse>
+        </Table.Td>
+      </Table.Tr>
+    </>
+  );
+}
+
+function GradeStudent({ item, submit, onGraded, token, mode }: GradeStudentProps) {
+  if (mode === "row") {
+    return <GradeStudentTableRow item={item} submit={submit} onGraded={onGraded} token={token} />;
+  }
+  return <GradeStudentCard item={item} submit={submit} onGraded={onGraded} token={token} />;
 }
 
 interface MassGradingPanelProps {
@@ -347,19 +539,20 @@ function MassGradingPanel({ items, submit, onDone }: MassGradingPanelProps) {
 
           <Divider label="Kriteria Penilaian" labelPosition="left" />
 
-          <Stack gap="sm">
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
             {CRITERIA.map((c) => (
               <Select
                 key={c.key}
                 label={c.label}
-                data={RATING_OPTIONS}
+                data={RATING_OPTIONS_FULL}
                 value={massRatings[c.key] ?? null}
                 onChange={(v) =>
                   setMassRatings((p) => ({ ...p, [c.key]: v as Rating }))
                 }
+                size="sm"
               />
             ))}
-          </Stack>
+          </SimpleGrid>
 
           {!allCriteriaFilled && selectedIds.length > 0 && (
             <Text size="sm" c="orange">
@@ -390,6 +583,9 @@ const GradePage: NextPageWithLayout = () => {
 
   const { info, submit } = useGrade(token);
 
+  // SSR-safe: undefined on server, resolves on client
+  const isDesktop = useMediaQuery("(min-width: 62em)");
+
   const notFound = info.isError;
   const loading = info.isLoading || !info.data;
 
@@ -401,61 +597,101 @@ const GradePage: NextPageWithLayout = () => {
   const graded = items.filter((i) => i.status === "graded").length;
   const total = items.length;
 
-  return (
-    <Card maw={700} mx="auto" mt={60} withBorder padding="lg">
-      <Stack>
-        <Title order={3}>Penilaian Magang</Title>
+  const headerInfo = (
+    <>
+      <Title order={3}>Penilaian Magang</Title>
+      <Group gap="lg" wrap="wrap">
         <Text size="sm"><strong>Perusahaan:</strong> {perusahaan}</Text>
         <Text size="sm"><strong>PIC / Pembimbing:</strong> {pic}</Text>
+      </Group>
 
-        <Group>
-          <Badge size="lg" variant="light" color={graded === total ? "green" : "orange"}>
-            Dinilai {graded} dari {total} siswa
-          </Badge>
-        </Group>
+      <Group>
+        <Badge size="lg" variant="light" color={graded === total ? "green" : "orange"}>
+          Dinilai {graded} dari {total} siswa
+        </Badge>
+      </Group>
 
-        {graded < total ? (
-          <Alert color="orange">
-            Masih ada {total - graded} siswa yang belum dinilai. Mohon nilai semua siswa.
-          </Alert>
-        ) : (
-          <Alert color="green">
-            Semua siswa sudah dinilai. Terima kasih.
-          </Alert>
-        )}
+      {graded < total ? (
+        <Alert color="orange">
+          Masih ada {total - graded} siswa yang belum dinilai. Mohon nilai semua siswa.
+        </Alert>
+      ) : (
+        <Alert color="green">
+          Semua siswa sudah dinilai. Terima kasih.
+        </Alert>
+      )}
+    </>
+  );
 
-        <MassGradingPanel
-          items={items}
-          submit={submit}
-          onDone={info.refetch}
-        />
+  return (
+    <Stack
+      mx="auto"
+      mt={40}
+      mb={60}
+      px={{ base: "sm", md: "xl" }}
+      style={{ maxWidth: isDesktop ? 1100 : 700 }}
+    >
+      {headerInfo}
 
-        <Accordion variant="separated" mt="sm">
+      <MassGradingPanel
+        items={items}
+        submit={submit}
+        onDone={info.refetch}
+      />
+
+      {/* Desktop: Table with criteria as columns */}
+      {isDesktop ? (
+        <Paper withBorder radius="md" style={{ overflow: "hidden" }}>
+          <Table.ScrollContainer minWidth={900}>
+            <Table striped highlightOnHover withColumnBorders verticalSpacing="xs" fz="sm">
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th style={{ minWidth: 140 }}>Nama</Table.Th>
+                  {CRITERIA.map((c) => (
+                    <Table.Th key={c.key} ta="center" style={{ minWidth: 72 }}>
+                      <Tooltip label={c.label} withArrow position="top">
+                        <Text size="xs" fw={600} style={{ cursor: "default" }}>
+                          {/* Shortened header to keep columns compact */}
+                          {c.label.length > 10 ? c.label.slice(0, 8) + "…" : c.label}
+                        </Text>
+                      </Tooltip>
+                    </Table.Th>
+                  ))}
+                  <Table.Th style={{ minWidth: 80 }}>Status</Table.Th>
+                  <Table.Th style={{ minWidth: 90 }}>Kirim</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {items.map((item) => (
+                  <GradeStudent
+                    key={item.id}
+                    item={item}
+                    submit={submit}
+                    onGraded={() => info.refetch()}
+                    token={token ?? ""}
+                    mode="row"
+                  />
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
+        </Paper>
+      ) : (
+        /* Mobile: Cards stacked */
+        <Stack gap="sm">
           {items.map((item) => (
-            <Accordion.Item key={item.id} value={item.id}>
-              <Accordion.Control>
-                <Group gap="sm">
-                  <Text fw={500}>{item.studentName || "(Nama belum diisi)"}</Text>
-                  {item.status === "graded" ? (
-                    <Badge color="green" size="sm">Sudah Dinilai</Badge>
-                  ) : (
-                    <Badge color="orange" size="sm">Belum Dinilai</Badge>
-                  )}
-                </Group>
-              </Accordion.Control>
-              <Accordion.Panel>
-                <GradeStudent
-                  item={item}
-                  submit={submit}
-                  onGraded={() => info.refetch()}
-                  token={token ?? ""}
-                />
-              </Accordion.Panel>
-            </Accordion.Item>
+            <GradeStudent
+              key={item.id}
+              item={item}
+              submit={submit}
+              onGraded={() => info.refetch()}
+              token={token ?? ""}
+              mode="card"
+            />
           ))}
-        </Accordion>
-      </Stack>
-    </Card>
+        </Stack>
+      )}
+    </Stack>
   );
 };
 
