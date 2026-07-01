@@ -1,3 +1,11 @@
+## [1.0.3](https://github.com/paludevhouse/personal-development-program/compare/v1.0.2...v1.0.3) (2026-07-01)
+
+
+### Bug Fixes
+
+* grade form draft recovery — stop re-seed effect clobbering restored draft ([68da63b](https://github.com/paludevhouse/personal-development-program/commit/68da63b0ab409120cc7c4d55223311e041d9e98a))
+* larger table minWidths so wide tables scroll horizontally instead of squeezing ([e543085](https://github.com/paludevhouse/personal-development-program/commit/e543085df845769e12d37905ccc4c3f7f61bf746))
+
 ## [1.0.2](https://github.com/paludevhouse/personal-development-program/compare/v1.0.1...v1.0.2) (2026-07-01)
 
 
