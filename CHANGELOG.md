@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/paludevhouse/personal-development-program/compare/v1.0.0...v1.0.1) (2026-07-01)
+
+
+### Bug Fixes
+
+* require Node >=22.12 so serverless supports require() of ESM (jose/jwks-rsa) ([854577e](https://github.com/paludevhouse/personal-development-program/commit/854577e1ea6e9f2937e7b5fc0e2815f9b8e71162))
+
 # 1.0.0 (2026-07-01)
 
 
