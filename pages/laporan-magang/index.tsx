@@ -46,6 +46,11 @@ export default function LaporanMagang() {
     return Object.fromEntries(enrollments.map((e) => [e.studentId, e.className]));
   }, [enrollmentsByYear.data]);
 
+  const genderById = useMemo<Record<string, "L" | "P">>(() => {
+    const students = studentList.data ?? [];
+    return Object.fromEntries(students.map((s) => [s.id, s.gender]));
+  }, [studentList.data]);
+
   const stats = useMemo(() => {
     const total = items.length;
     const graded = items.filter((i) => i.status === "graded");
@@ -62,7 +67,7 @@ export default function LaporanMagang() {
   }, [items]);
 
   const handleExport = () => {
-    const wb = buildGradesWorkbook(items, { academicYear, nisById, kelasById });
+    const wb = buildGradesWorkbook(items, { academicYear, nisById, kelasById, genderById });
     XLSX.writeFile(wb, "nilai-magang.xlsx");
   };
 

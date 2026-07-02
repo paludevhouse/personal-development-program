@@ -30,11 +30,43 @@ const graded: Internship = {
   tanggal: "2024-06-01",
 };
 
+const canvaRatings: InternshipRatings = {
+  kedisiplinan: "A",
+  kerjasama: "B",
+  inisiatif: "A",
+  tanggungJawab: "B",
+  adaptasi: "B",
+  memberiMasukan: "C",
+  pengumpulanLaporan: "A",
+};
+
+const canvaExample: Internship = {
+  id: "2",
+  studentId: "s2",
+  academicYearId: "ay1",
+  studentName: "Muhammad Budi Santoso Susilo",
+  lokasiMagang: "PT Sinar Abadi",
+  posisi: "Tax Intern",
+  pembimbing: "Bu Sri",
+  phone: "08129876543",
+  token: "tok2",
+  status: "graded",
+  ratings: canvaRatings,
+  nilaiAkhir: 92.3,
+  kategori: "baik",
+  tanggal: "2024-06-01 - 2024-08-01",
+};
+
 const opts = {
   academicYear: "2025/2026",
-  nisById: { s1: "12345" },
-  kelasById: { s1: "XII RPL 1" },
+  nisById: { s1: "12345", s2: "67890" },
+  kelasById: { s1: "XII RPL 1", s2: "XII AKL 1" },
+  genderById: { s1: "L" as const, s2: "P" as const },
 };
+
+function canvaRows(wb: XLSX.WorkBook) {
+  return XLSX.utils.sheet_to_json<Record<string, string | number>>(wb.Sheets["Canva"]);
+}
 
 // Helper: read data rows only (skip the 3 title rows)
 function dataRows(wb: XLSX.WorkBook) {
@@ -82,5 +114,40 @@ describe("buildGradesWorkbook", () => {
     const wb = buildGradesWorkbook([], opts);
     const rows = dataRows(wb);
     expect(rows).toHaveLength(0);
+  });
+
+  it("includes a Canva sheet with a header row and one row per student", () => {
+    const wb = buildGradesWorkbook([graded, canvaExample], opts);
+    expect(wb.SheetNames).toContain("Canva");
+    const rows = canvaRows(wb);
+    expect(rows).toHaveLength(2);
+  });
+
+  it("Canva sheet shortens the name, maps kategori to English, and reports letters/score/pronoun", () => {
+    const wb = buildGradesWorkbook([canvaExample], opts);
+    const row = canvaRows(wb)[0];
+    expect(row["Full Name"]).toBe("Muhammad Budi Santoso Susilo");
+    expect(row["Name"]).toBe("Muhammad Budi S. S.");
+    expect(row["Class"]).toBe("XII AKL 1");
+    expect(row["Student Number"]).toBe("67890");
+    expect(row["Discipline"]).toBe("A");
+    expect(row["Overall Performance"]).toBe("Good");
+    expect(row["Score"]).toBe(92.3);
+    expect(row["Pronoun"]).toBe("her");
+  });
+
+  it("Canva sheet generates the exact certificate paragraph per student", () => {
+    const wb = buildGradesWorkbook([canvaExample], opts);
+    const row = canvaRows(wb)[0];
+    expect(row["Certificate Text"]).toBe(
+      "For successfully completing her internship at PT Sinar Abadi as a Tax Intern, in fulfillment of the Personal Development Program at Masa Depan Cerah Senior High School for the 2025/2026 academic year",
+    );
+  });
+
+  it("Canva sheet uses his for male students", () => {
+    const wb = buildGradesWorkbook([graded], opts);
+    const row = canvaRows(wb)[0];
+    expect(row["Pronoun"]).toBe("his");
+    expect(row["Certificate Text"]).toContain("completing his internship");
   });
 });
