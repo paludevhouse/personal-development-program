@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/paludevhouse/personal-development-program/compare/v1.2.0...v1.2.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* grade table shows real ratings + kategori for graded rows ([c7ff658](https://github.com/paludevhouse/personal-development-program/commit/c7ff658f8928fe2eb0cd1f2ccacdcb8b114ee7e9))
+
 # [1.2.0](https://github.com/paludevhouse/personal-development-program/compare/v1.1.0...v1.2.0) (2026-07-01)
 
 
