@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/paludevhouse/personal-development-program/compare/v1.10.0...v1.11.0) (2026-07-02)
+
+
+### Features
+
+* empty-file warning on all import pages ([9dd2b43](https://github.com/paludevhouse/personal-development-program/commit/9dd2b43ef2af3a23bbcd3bab79aa2d4eadda6928))
+
 # [1.10.0](https://github.com/paludevhouse/personal-development-program/compare/v1.9.1...v1.10.0) (2026-07-02)
 
 
