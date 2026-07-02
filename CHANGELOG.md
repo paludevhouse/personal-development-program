@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/paludevhouse/personal-development-program/compare/v1.9.1...v1.10.0) (2026-07-02)
+
+
+### Features
+
+* warn on import when an uploaded file yields zero rows ([c6d143b](https://github.com/paludevhouse/personal-development-program/commit/c6d143bc220e8d4750b2c0ea90346f5c2e108112))
+
 ## [1.9.1](https://github.com/paludevhouse/personal-development-program/compare/v1.9.0...v1.9.1) (2026-07-02)
 
 
