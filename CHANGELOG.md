@@ -1,3 +1,11 @@
+# [1.7.0](https://github.com/paludevhouse/personal-development-program/compare/v1.6.0...v1.7.0) (2026-07-02)
+
+
+### Features
+
+* bounded table scroll (sticky header) on list pages + show admin email ([cb6ae41](https://github.com/paludevhouse/personal-development-program/commit/cb6ae4154e0fb3b50276219ca5b459181145819b))
+* grade page mass-fill applies to table + single Kirim Semua submit (no per-row send) ([600c820](https://github.com/paludevhouse/personal-development-program/commit/600c8204b891fbc797e90d0a8dff0229ac102a5d))
+
 # [1.6.0](https://github.com/paludevhouse/personal-development-program/compare/v1.5.0...v1.6.0) (2026-07-02)
 
 
