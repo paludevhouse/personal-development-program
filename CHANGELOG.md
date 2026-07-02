@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/paludevhouse/personal-development-program/compare/v1.8.2...v1.9.0) (2026-07-02)
+
+
+### Features
+
+* optimistic updates, skeleton loaders, empty-state CTAs ([f37248e](https://github.com/paludevhouse/personal-development-program/commit/f37248ef986c9130a62a9b711f75cb304eaab70e))
+
 ## [1.8.2](https://github.com/paludevhouse/personal-development-program/compare/v1.8.1...v1.8.2) (2026-07-02)
 
 
