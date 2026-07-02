@@ -307,16 +307,17 @@ function GradeStudentTableRow({ item, submit, onGraded, token }: Omit<GradeStude
           </Table.Td>
           {CRITERIA.map((c) => (
             <Table.Td key={c.key} ta="center">
-              <Text size="sm" c="dimmed">-</Text>
+              <Text size="sm" fw={500}>{item.ratings?.[c.key] ?? "-"}</Text>
             </Table.Td>
           ))}
           <Table.Td>
-            <Badge color="green" size="sm">Sudah Dinilai</Badge>
+            <Badge color="green" size="sm">Dinilai</Badge>
           </Table.Td>
           <Table.Td ta="center">
-            <Text size="xs" c="dimmed">
-              {item.nilaiAkhir?.toFixed(2) ?? "-"}
-            </Text>
+            <Stack gap={0}>
+              <Text size="sm" fw={600}>{item.nilaiAkhir?.toFixed(2) ?? "-"}</Text>
+              {item.kategori && <Text size="xs" c="dimmed">{item.kategori}</Text>}
+            </Stack>
           </Table.Td>
         </Table.Tr>
       </>
