@@ -102,7 +102,7 @@ export default function StudentsPage() {
   function handleAssign() {
     if (!yearId || !assignClassId) return;
     assignMut.mutate(
-      { academicYearId: yearId, classId: assignClassId, studentIds: Array.from(selectedIds) },
+      { academicYearId: yearId, classId: assignClassId, studentIds: Array.from(selectedIds), className: assignClassName },
       {
         onSuccess: (data) => {
           notifications.show({ color: "green", message: `Berhasil menetapkan ${data.count} siswa ke kelas ${assignClassName}` });
@@ -258,7 +258,19 @@ export default function StudentsPage() {
       ) : query.isError ? (
         <StateView icon={<WarningOctagon size={44} weight="duotone" />} title="Gagal memuat data" description="Terjadi kesalahan saat mengambil data siswa." />
       ) : !query.isFetched ? (
-        <StateView icon={<MagnifyingGlass size={44} weight="duotone" />} title="Mulai pencarian" description="Pilih tahun ajaran dan/atau kelas, lalu klik Cari." />
+        <StateView
+          icon={<MagnifyingGlass size={44} weight="duotone" />}
+          title="Mulai pencarian"
+          description="Pilih tahun ajaran dan/atau kelas, lalu klik Cari."
+          action={
+            <Button
+              leftSection={<MagnifyingGlass size={16} weight="bold" />}
+              onClick={() => { set({ year: yearId ?? null, class: classId ?? null, status: statusFilter }); query.refetch(); }}
+            >
+              Cari Sekarang
+            </Button>
+          }
+        />
       ) : rows.length === 0 ? (
         <StateView icon={<UsersThree size={44} weight="duotone" />} title="Tidak ada siswa" description="Tidak ada siswa yang cocok dengan filter ini." />
       ) : (
@@ -297,7 +309,14 @@ export default function StudentsPage() {
                   <Table.Td>{s.className ?? "-"}</Table.Td>
                   <Table.Td>{s.gender}</Table.Td>
                   <Table.Td>
-                    <Select size="xs" data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"}]} value={s.status ?? "aktif"} onChange={(v) => v && update.mutate({ ...s, status: v as StudentStatus })} />
+                    <Select
+                      size="xs"
+                      data={[{value:"aktif",label:"Aktif"},{value:"lulus",label:"Lulus"},{value:"pindah",label:"Pindah"}]}
+                      value={s.status ?? "aktif"}
+                      onChange={(v) => v && update.mutate({ ...s, status: v as StudentStatus }, {
+                        onError: () => notifications.show({ color: "red", message: "Gagal mengubah status siswa" }),
+                      })}
+                    />
                   </Table.Td>
                   <Table.Td><Button component={Link} href={`/students/${s.id}`} size="xs" variant="light">Detail</Button></Table.Td>
                 </Table.Tr>

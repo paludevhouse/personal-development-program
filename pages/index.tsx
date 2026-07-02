@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Card, SimpleGrid, Text, Title, Stack, ThemeIcon, Group, Progress, Badge } from "@mantine/core";
+import { Card, SimpleGrid, Text, Title, Stack, ThemeIcon, Group, Progress, Badge, Skeleton } from "@mantine/core";
 import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
 import {
   Student as StudentIcon,
@@ -29,10 +29,10 @@ const LINKS = [
 ];
 
 function StatCard({
-  Icon, label, value, sub, color = "brand", progress, href,
+  Icon, label, value, sub, color = "brand", progress, href, loading,
 }: {
   Icon: PhosphorIcon;
-  label: string; value: React.ReactNode; sub?: string; color?: string; progress?: number; href?: string;
+  label: string; value: React.ReactNode; sub?: string; color?: string; progress?: number; href?: string; loading?: boolean;
 }) {
   const inner = (
     <Card withBorder padding="lg" radius="md" h="100%" style={{ textDecoration: "none" }}>
@@ -40,9 +40,13 @@ function StatCard({
         <Text size="sm" c="dimmed" fw={500}>{label}</Text>
         <ThemeIcon variant="light" size="lg" radius="md" color={color}><Icon size={20} weight="duotone" /></ThemeIcon>
       </Group>
-      <Text fw={700} size="1.7rem" lh={1.1}>{value}</Text>
-      {sub && <Text size="xs" c="dimmed" mt={4}>{sub}</Text>}
-      {progress !== undefined && <Progress value={progress} color={color} size="sm" mt="sm" radius="xl" />}
+      {loading ? <Skeleton height={28} width="60%" radius="sm" /> : <Text fw={700} size="1.7rem" lh={1.1}>{value}</Text>}
+      {loading ? (
+        <Skeleton height={14} width="80%" radius="sm" mt={8} />
+      ) : (
+        sub && <Text size="xs" c="dimmed" mt={4}>{sub}</Text>
+      )}
+      {progress !== undefined && !loading && <Progress value={progress} color={color} size="sm" mt="sm" radius="xl" />}
     </Card>
   );
   return href ? <Link href={href} style={{ textDecoration: "none" }}>{inner}</Link> : inner;
@@ -89,18 +93,18 @@ export default function Home() {
       </Group>
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
-        <StatCard Icon={StudentIcon} label="Siswa Aktif" color="brand" href="/students"
+        <StatCard Icon={StudentIcon} label="Siswa Aktif" color="brand" href="/students" loading={loading}
           value={dash(loading, aktif)} sub={`${nonaktif} nonaktif · ${totalSiswa} total`} />
-        <StatCard Icon={Chalkboard} label="Kelas" color="grape" href="/classes"
+        <StatCard Icon={Chalkboard} label="Kelas" color="grape" href="/classes" loading={loading}
           value={dash(loading, kelasCount)} sub={activeYear ? `Tahun ${activeYear.year}` : "—"} />
-        <StatCard Icon={GraduationCap} label="Progres Penilaian Magang" color="teal" href="/internships"
+        <StatCard Icon={GraduationCap} label="Progres Penilaian Magang" color="teal" href="/internships" loading={loading}
           value={dash(loading, `${dinilai}/${magangTotal}`)} sub={`${gradedPct}% sudah dinilai`} progress={gradedPct} />
-        <StatCard Icon={ChartBar} label="Rata-rata Nilai Magang" color="orange" href="/laporan-magang"
+        <StatCard Icon={ChartBar} label="Rata-rata Nilai Magang" color="orange" href="/laporan-magang" loading={loading}
           value={dash(loading, avgNilai != null ? avgNilai.toFixed(1) : "—")}
           sub={dinilai ? `dari ${dinilai} siswa dinilai` : "belum ada nilai"} />
-        <StatCard Icon={ChatCircleText} label="Konseling" color="blue" href="/counseling"
+        <StatCard Icon={ChatCircleText} label="Konseling" color="blue" href="/counseling" loading={loading}
           value={dash(loading, konselingTotal)} sub={`${konselingOpen} sesi terbuka`} />
-        <StatCard Icon={ClipboardText} label="Wawancara Penjurusan" color="indigo" href="/wawancara"
+        <StatCard Icon={ClipboardText} label="Wawancara Penjurusan" color="indigo" href="/wawancara" loading={loading}
           value={dash(loading, wawancaraTotal)} sub={`${wawancaraDijadwalkan} dijadwalkan`} />
       </SimpleGrid>
 

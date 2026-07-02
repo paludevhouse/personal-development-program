@@ -62,7 +62,7 @@ export default function ClassRosterPage() {
   function handleAdd() {
     if (!cls.data || selectedIds.length === 0) return;
     assignMut.mutate(
-      { academicYearId: cls.data.academicYearId, classId: cls.data.id, studentIds: selectedIds },
+      { academicYearId: cls.data.academicYearId, classId: cls.data.id, studentIds: selectedIds, className: cls.data.name },
       {
         onSuccess: (data) => {
           notifications.show({ color: "green", message: `Menambahkan ${data.count} siswa` });
