@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import { Button, FileInput, Group, Stack, Table, Title, Text, Select, Modal, Checkbox, Card, Center } from "@mantine/core";
-import { DownloadSimple, UploadSimple } from "@phosphor-icons/react";
+import { Button, FileInput, Group, Stack, Table, Title, Text, Select, Modal, Checkbox, Card, Center, Alert } from "@mantine/core";
+import { DownloadSimple, UploadSimple, WarningCircle } from "@phosphor-icons/react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
 import { parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
@@ -57,6 +57,7 @@ export default function ImportInternshipsPage() {
   const studentList = useStudentList();
   const companies = useCompanies();
   const [parsed, setParsed] = useState<ParsedInternship[]>([]);
+  const [emptyFile, setEmptyFile] = useState(false);
   const [results, setResults] = useState<{ success: ParsedInternship[]; failed: { row: ParsedInternship; error: string }[] } | null>(null);
   const importMut = useInternshipImport();
   
@@ -70,6 +71,7 @@ export default function ImportInternshipsPage() {
 
   async function onFile(file: File | null) {
     setResults(null);
+    setEmptyFile(false);
     if (!file) {
       setParsed([]);
       return;
@@ -78,7 +80,7 @@ export default function ImportInternshipsPage() {
     const wb = XLSX.read(buf);
     const ws = wb.Sheets["Template"] ?? wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
-    
+
     const data = rows.map((raw) => {
       const r = parseIndonesianRow(raw);
       return {
@@ -89,8 +91,9 @@ export default function ImportInternshipsPage() {
         phone: String(r.phone || ""),
       };
     }).filter(r => r.studentId);
-    
+
     setParsed(data);
+    setEmptyFile(data.length === 0);
   }
 
   function confirm() {
@@ -165,6 +168,12 @@ export default function ImportInternshipsPage() {
           />
         </Stack>
       </Card>
+
+      {emptyFile && (
+        <Alert color="orange" icon={<WarningCircle size={20} />} title="Tidak ada data terbaca">
+          File terunggah tapi tidak ada baris magang yang valid. Pastikan Anda memakai templat (tombol &quot;Unduh Template&quot;), mengisi kolom <b>NIS</b>, serta menyimpan data di sheet <b>Template</b>.
+        </Alert>
+      )}
 
       {parsed.length > 0 && (
         <Card withBorder padding="md" radius="md">

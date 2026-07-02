@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import { Button, FileInput, Group, Select, Stack, Table, Title, Text, Modal, Checkbox, Card, Center } from "@mantine/core";
-import { DownloadSimple, UploadSimple } from "@phosphor-icons/react";
+import { Button, FileInput, Group, Select, Stack, Table, Title, Text, Modal, Checkbox, Card, Center, Alert } from "@mantine/core";
+import { DownloadSimple, UploadSimple, WarningCircle } from "@phosphor-icons/react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
 import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
@@ -17,6 +17,7 @@ export default function ImportPage() {
   const classes = useClasses(yearId ?? undefined);
   const [classId, setClassId] = useState<string | null>(null);
   const [parsed, setParsed] = useState<ParsedStudent[]>([]);
+  const [emptyFile, setEmptyFile] = useState(false);
   const [results, setResults] = useState<StudentImportResult | null>(null);
   const importMut = useStudentImport();
 
@@ -27,6 +28,7 @@ export default function ImportPage() {
 
   async function onFile(file: File | null) {
     setResults(null);
+    setEmptyFile(false);
     if (!file) {
       setParsed([]);
       return;
@@ -35,7 +37,9 @@ export default function ImportPage() {
     const wb = XLSX.read(buf);
     const ws = wb.Sheets["Template"] ?? wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
-    setParsed(parseStudentRows(rows));
+    const data = parseStudentRows(rows);
+    setParsed(data);
+    setEmptyFile(data.length === 0);
   }
 
   // Can confirm if: yearId is set AND (classId is set OR at least one parsed row has a kelas value)
@@ -122,6 +126,12 @@ export default function ImportPage() {
         </Stack>
       </Card>
 
+      {emptyFile && (
+        <Alert color="orange" icon={<WarningCircle size={20} />} title="Tidak ada data terbaca">
+          File terunggah tapi tidak ada baris siswa yang valid. Pastikan Anda memakai templat (tombol &quot;Unduh Template&quot;), mengisi kolom <b>Nama Lengkap</b> dan <b>NIS</b>, serta menyimpan data di sheet <b>Template</b>.
+        </Alert>
+      )}
+
       {parsed.length > 0 && (
         <Card withBorder padding="md" radius="md">
           <Stack>
@@ -153,7 +163,7 @@ export default function ImportPage() {
                 onClick={confirm}
                 disabled={!yearId || (!classId && !hasRowKelas)}
               >
-                Konfirmasi Impor
+                Konfirmasi Import
               </Button>
             </Center>
           </Stack>

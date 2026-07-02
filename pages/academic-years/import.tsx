@@ -1,7 +1,7 @@
 import { useState } from "react";
 import * as XLSX from "xlsx";
-import { Button, FileInput, Group, Stack, Table, Title, Text, Modal, Checkbox, Card, Center } from "@mantine/core";
-import { DownloadSimple, UploadSimple } from "@phosphor-icons/react";
+import { Button, FileInput, Group, Stack, Table, Title, Text, Modal, Checkbox, Card, Center, Alert } from "@mantine/core";
+import { DownloadSimple, UploadSimple, WarningCircle } from "@phosphor-icons/react";
 import { notifications } from "@mantine/notifications";
 import { useDisclosure } from "@mantine/hooks";
 import { parseIndonesianRow, TEMPLATE_HEADERS, FIELD_LABELS } from "@/lib/excel/templates";
@@ -39,6 +39,7 @@ function useAcademicYearImport() {
 
 export default function ImportAcademicYearsPage() {
   const [parsed, setParsed] = useState<Omit<AcademicYear, "id">[]>([]);
+  const [emptyFile, setEmptyFile] = useState(false);
   const [results, setResults] = useState<{ success: Omit<AcademicYear, "id">[]; failed: { row: Omit<AcademicYear, "id">; error: string }[] } | null>(null);
   const importMut = useAcademicYearImport();
 
@@ -49,6 +50,7 @@ export default function ImportAcademicYearsPage() {
 
   async function onFile(file: File | null) {
     setResults(null);
+    setEmptyFile(false);
     if (!file) {
       setParsed([]);
       return;
@@ -68,6 +70,7 @@ export default function ImportAcademicYearsPage() {
     }).filter(r => r.year);
 
     setParsed(data);
+    setEmptyFile(data.length === 0);
   }
 
   function confirm() {
@@ -134,6 +137,12 @@ export default function ImportAcademicYearsPage() {
           />
         </Stack>
       </Card>
+
+      {emptyFile && (
+        <Alert color="orange" icon={<WarningCircle size={20} />} title="Tidak ada data terbaca">
+          File terunggah tapi tidak ada baris tahun ajaran yang valid. Pastikan Anda memakai templat (tombol &quot;Unduh Template&quot;), mengisi kolom <b>Tahun</b>, serta menyimpan data di sheet <b>Template</b>.
+        </Alert>
+      )}
 
       {parsed.length > 0 && (
         <Card withBorder padding="md" radius="md">
