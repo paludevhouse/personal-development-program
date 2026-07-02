@@ -13,6 +13,7 @@ import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
 import { useDefaultYear } from "@/lib/hooks/useDefaultYear";
 import { useUrlParams } from "@/lib/hooks/useUrlParams";
 import { useAssignClass } from "@/lib/hooks/useAssignClass";
+import { useBulkStatus } from "@/lib/hooks/useBulkStatus";
 import { StudentStatus } from "@/lib/types";
 import { buildRosterWorkbook } from "@/lib/excel/exportRoster";
 
@@ -34,6 +35,9 @@ export default function StudentsPage() {
   const [assignClassId, setAssignClassId] = useState<string | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const assignMut = useAssignClass();
+  const [bulkStatus, setBulkStatus] = useState<string | null>(null);
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
+  const bulkStatusMut = useBulkStatus();
 
   // Initialize filter state from URL once router is ready
   useEffect(() => {
@@ -43,7 +47,10 @@ export default function StudentsPage() {
     const urlStatus = get("status");
     if (urlYear) setYearId(urlYear);
     if (urlClass) setClassId(urlClass);
-    if (urlStatus) setStatusFilter(urlStatus);
+    if (urlStatus) {
+      // Map legacy ?status=lulus/pindah URLs onto the Nonaktif tab
+      setStatusFilter(urlStatus === "lulus" || urlStatus === "pindah" ? "nonaktif" : urlStatus);
+    }
     // Auto-refetch once if filters are present in the URL
     if (!didAutoFetch.current && (urlYear || urlClass)) {
       didAutoFetch.current = true;
@@ -54,7 +61,12 @@ export default function StudentsPage() {
 
   const yearOptions = activeYears.map((y) => ({ value: y.id, label: y.year }));
   const classOptions = (classes.data.data ?? []).map((c) => ({ value: c.id, label: c.name }));
-  const rows = (query.data ?? []).filter((s) => statusFilter === "all" ? true : (s.status ?? "aktif") === statusFilter);
+  const rows = (query.data ?? []).filter((s) => {
+    const status = s.status ?? "aktif";
+    if (statusFilter === "all") return true;
+    if (statusFilter === "nonaktif") return status === "lulus" || status === "pindah";
+    return status === "aktif";
+  });
 
   // Clear selection whenever rows change (filter/refetch)
   useEffect(() => { setSelectedIds(new Set()); }, [query.dataUpdatedAt]);
@@ -80,6 +92,12 @@ export default function StudentsPage() {
 
   const selectedCount = selectedIds.size;
   const assignClassName = classOptions.find((c) => c.value === assignClassId)?.label ?? "";
+  const statusOptions = [
+    { value: "aktif", label: "Aktif" },
+    { value: "lulus", label: "Lulus" },
+    { value: "pindah", label: "Pindah" },
+  ];
+  const bulkStatusLabel = statusOptions.find((o) => o.value === bulkStatus)?.label ?? "";
 
   function handleAssign() {
     if (!yearId || !assignClassId) return;
@@ -94,6 +112,23 @@ export default function StudentsPage() {
           query.refetch();
         },
         onError: () => { notifications.show({ color: "red", message: "Gagal menetapkan kelas" }); setConfirmOpen(false); },
+      }
+    );
+  }
+
+  function handleBulkStatus() {
+    if (!bulkStatus) return;
+    bulkStatusMut.mutate(
+      { studentIds: Array.from(selectedIds), status: bulkStatus as StudentStatus },
+      {
+        onSuccess: (data) => {
+          notifications.show({ color: "green", message: `Status ${data.count} siswa diperbarui` });
+          setSelectedIds(new Set());
+          setBulkStatus(null);
+          setStatusConfirmOpen(false);
+          query.refetch();
+        },
+        onError: () => { notifications.show({ color: "red", message: "Gagal mengubah status" }); setStatusConfirmOpen(false); },
       }
     );
   }
@@ -138,37 +173,55 @@ export default function StudentsPage() {
       >
         <Tabs.List>
           <Tabs.Tab value="aktif">Aktif</Tabs.Tab>
-          <Tabs.Tab value="lulus">Lulus</Tabs.Tab>
-          <Tabs.Tab value="pindah">Pindah</Tabs.Tab>
+          <Tabs.Tab value="nonaktif">Nonaktif</Tabs.Tab>
           <Tabs.Tab value="all">Semua</Tabs.Tab>
         </Tabs.List>
       </Tabs>
 
-      {/* Bulk-assign bar */}
+      {/* Bulk action bar */}
       {selectedCount > 0 && (
         <Paper withBorder p="sm" radius="md">
-          <Group align="flex-end">
+          <Stack gap="sm">
             <Text size="sm" fw={500}>{selectedCount} siswa dipilih</Text>
-            <Select
-              label="Tetapkan ke Kelas"
-              data={classOptions}
-              value={assignClassId}
-              onChange={setAssignClassId}
-              placeholder="Pilih kelas"
-              style={{ minWidth: 200 }}
-            />
-            <Button
-              disabled={!yearId || !assignClassId}
-              loading={assignMut.isPending}
-              onClick={() => setConfirmOpen(true)}
-            >
-              Terapkan
-            </Button>
-          </Group>
+            <Group align="flex-end">
+              <Select
+                label="Tetapkan ke Kelas"
+                data={classOptions}
+                value={assignClassId}
+                onChange={setAssignClassId}
+                placeholder="Pilih kelas"
+                style={{ minWidth: 200 }}
+              />
+              <Button
+                disabled={!yearId || !assignClassId}
+                loading={assignMut.isPending}
+                onClick={() => setConfirmOpen(true)}
+              >
+                Terapkan
+              </Button>
+            </Group>
+            <Group align="flex-end">
+              <Select
+                label="Ubah Status"
+                data={statusOptions}
+                value={bulkStatus}
+                onChange={setBulkStatus}
+                placeholder="Pilih status"
+                style={{ minWidth: 200 }}
+              />
+              <Button
+                disabled={!bulkStatus}
+                loading={bulkStatusMut.isPending}
+                onClick={() => setStatusConfirmOpen(true)}
+              >
+                Ubah Status
+              </Button>
+            </Group>
+          </Stack>
         </Paper>
       )}
 
-      {/* Confirm modal */}
+      {/* Confirm modal: class assignment */}
       <Modal
         opened={confirmOpen}
         onClose={() => setConfirmOpen(false)}
@@ -180,6 +233,22 @@ export default function StudentsPage() {
           <Group justify="flex-end">
             <Button variant="default" onClick={() => setConfirmOpen(false)}>Batal</Button>
             <Button loading={assignMut.isPending} onClick={handleAssign}>Terapkan</Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {/* Confirm modal: bulk status change */}
+      <Modal
+        opened={statusConfirmOpen}
+        onClose={() => setStatusConfirmOpen(false)}
+        title="Konfirmasi Ubah Status"
+        centered
+      >
+        <Stack>
+          <Text>Ubah status {selectedCount} siswa menjadi <strong>{bulkStatusLabel}</strong>?</Text>
+          <Group justify="flex-end">
+            <Button variant="default" onClick={() => setStatusConfirmOpen(false)}>Batal</Button>
+            <Button loading={bulkStatusMut.isPending} onClick={handleBulkStatus}>Ubah Status</Button>
           </Group>
         </Stack>
       </Modal>
