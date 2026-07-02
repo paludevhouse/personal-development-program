@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/paludevhouse/personal-development-program/compare/v1.7.0...v1.8.0) (2026-07-02)
+
+
+### Features
+
+* stats dashboard + format supervisor name in Canva export ([00bff95](https://github.com/paludevhouse/personal-development-program/commit/00bff952028ff72eb7abbb5669855b24a3c15c6f))
+
 # [1.7.0](https://github.com/paludevhouse/personal-development-program/compare/v1.6.0...v1.7.0) (2026-07-02)
 
 
