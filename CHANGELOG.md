@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/paludevhouse/personal-development-program/compare/v1.5.0...v1.6.0) (2026-07-02)
+
+
+### Features
+
+* Canva bulk-create sheet in grade export (short name, letter grades, overall performance, pronoun) ([afad00f](https://github.com/paludevhouse/personal-development-program/commit/afad00f8980e45c3493822ca276ad0cb6fc65c5b))
+
 # [1.5.0](https://github.com/paludevhouse/personal-development-program/compare/v1.4.0...v1.5.0) (2026-07-02)
 
 
