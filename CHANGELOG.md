@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/paludevhouse/personal-development-program/compare/v1.8.0...v1.8.1) (2026-07-02)
+
+
+### Performance Improvements
+
+* persist query cache to localStorage + longer staleTime on read hooks ([2fdb5d6](https://github.com/paludevhouse/personal-development-program/commit/2fdb5d6cc631d7dd10aa7713c00fcfc562574db6))
+
 # [1.8.0](https://github.com/paludevhouse/personal-development-program/compare/v1.7.0...v1.8.0) (2026-07-02)
 
 
