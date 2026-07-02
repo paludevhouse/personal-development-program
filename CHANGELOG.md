@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/paludevhouse/personal-development-program/compare/v1.4.0...v1.5.0) (2026-07-02)
+
+
+### Features
+
+* class promotion / year rollover flow (redesign phase C) ([e145cc3](https://github.com/paludevhouse/personal-development-program/commit/e145cc3f79c739c5a16c04fcfa80eae6ee2f1482))
+
 # [1.4.0](https://github.com/paludevhouse/personal-development-program/compare/v1.3.0...v1.4.0) (2026-07-02)
 
 
