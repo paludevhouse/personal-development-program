@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import axios from "axios";
 import {
@@ -25,7 +25,7 @@ import {
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { DateInput } from "@mantine/dates";
-import { CaretDown, CaretUp } from "@phosphor-icons/react";
+import { CaretDown, CaretUp, Check } from "@phosphor-icons/react";
 import { CRITERIA } from "@/lib/internship/grade";
 import { InternshipRatings, Rating } from "@/lib/types";
 import { useGrade, GradeItem } from "@/lib/hooks/useGrade";
@@ -52,128 +52,46 @@ function toDate(s: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-interface GradeStudentProps {
-  item: GradeItem;
-  submit: ReturnType<typeof useGrade>["submit"];
-  onGraded: () => void;
-  token: string;
-  mode: "card" | "row";
+/** Per-student form state, lifted to the page so the mass panel and the
+ * single "Kirim Semua" action can read/write it directly. */
+interface RowForm {
+  ratings: Partial<InternshipRatings>;
+  studentName: string;
+  lokasiMagang: string;
+  posisi: string;
+  pembimbing: string;
+  phone: string;
+  tanggal: string;
 }
 
-/** Shared logic hook extracted so both card and table-row renderers can use it */
-function useStudentGradeState(
-  item: GradeItem,
-  token: string,
-  submit: ReturnType<typeof useGrade>["submit"],
-  onGraded: () => void
-) {
-  const [ratings, setRatings] = useState<Partial<InternshipRatings>>({});
-  const [studentName, setStudentName] = useState(item.studentName ?? "");
-  const [lokasiMagang, setLokasiMagang] = useState(item.lokasiMagang ?? "");
-  const [posisi, setPosisi] = useState(item.posisi ?? "");
-  const [pembimbing, setPembimbing] = useState(item.pembimbing ?? "");
-  const [phone, setPhone] = useState(item.phone ?? "");
-  const [tanggal, setTanggal] = useState(item.tanggal ?? "");
-  const [error, setError] = useState("");
-  const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
+function draftKeyFor(token: string, id: string): string {
+  return `grade-draft:${token}:${id}`;
+}
 
-  const draftKey = `grade-draft:${token}:${item.id}`;
-
-  // Restore draft from store on mount (non-graded only)
-  useEffect(() => {
-    if (item.status === "graded") return;
-    const d = useDraftStore.getState().getDraft(draftKey);
-    if (d) {
-      if (d.studentName != null) setStudentName(d.studentName as string);
-      if (d.lokasiMagang != null) setLokasiMagang(d.lokasiMagang as string);
-      if (d.posisi != null) setPosisi(d.posisi as string);
-      if (d.pembimbing != null) setPembimbing(d.pembimbing as string);
-      if (d.phone != null) setPhone(d.phone as string);
-      if (d.tanggal != null) setTanggal(d.tanggal as string);
-      if (d.ratings) setRatings(d.ratings as Partial<InternshipRatings>);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Auto-save draft to store on change (non-graded only)
-  useEffect(() => {
-    if (item.status === "graded") return;
-    useDraftStore.getState().setDraft(draftKey, { studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings });
-  }, [studentName, lokasiMagang, posisi, pembimbing, phone, tanggal, ratings, item.status, draftKey]);
-
-  // NOTE: do NOT re-seed from `item` on change — it would overwrite the
-  // restored draft and clobber in-progress input on every refetch. Initial
-  // state comes from the useState initializers above; the draft (if any)
-  // overrides it on mount. Graded items early-return to the read-only view
-  // below regardless of form state.
-
-  function validate(): string {
-    const missing: string[] = [];
-    if (!studentName) missing.push("Nama Siswa");
-    if (!lokasiMagang) missing.push("Lokasi Magang");
-    if (!posisi) missing.push("Posisi");
-    if (!pembimbing) missing.push("Pembimbing");
-    const missingCriteria = CRITERIA.filter((c) => !ratings[c.key]);
-    if (missingCriteria.length > 0) missing.push("semua kriteria penilaian");
-    if (missing.length > 0) {
-      return `Lengkapi: ${missing.join(", ")}.`;
-    }
-    return "";
-  }
-
-  function handleSubmitClick() {
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      return;
-    }
-    setError("");
-    openConfirm();
-  }
-
-  function handleConfirm() {
-    submit.mutate(
-      {
-        internshipId: item.id,
-        ratings: ratings as InternshipRatings,
-        studentName,
-        lokasiMagang,
-        posisi,
-        pembimbing,
-        phone,
-        tanggal,
-      },
-      {
-        onSuccess: () => {
-          useDraftStore.getState().clearDraft(draftKey);
-          closeConfirm();
-          onGraded();
-        },
-        onError: (e) => {
-          closeConfirm();
-          if (axios.isAxiosError(e) && e.response?.status === 409) {
-            setError("Penilaian sudah dikirim sebelumnya");
-            onGraded();
-          } else {
-            setError("Gagal mengirim penilaian. Coba lagi.");
-          }
-        },
-      }
-    );
-  }
-
+/** Default form for a (non-graded) item — restored draft, if any, wins over
+ * the server-provided placement values. */
+function defaultRowForm(item: GradeItem, token: string): RowForm {
+  const d = useDraftStore.getState().getDraft(draftKeyFor(token, item.id));
   return {
-    ratings, setRatings,
-    studentName, setStudentName,
-    lokasiMagang, setLokasiMagang,
-    posisi, setPosisi,
-    pembimbing, setPembimbing,
-    phone, setPhone,
-    tanggal, setTanggal,
-    error,
-    confirmOpened, openConfirm, closeConfirm,
-    handleSubmitClick, handleConfirm,
+    ratings: (d?.ratings as Partial<InternshipRatings>) ?? {},
+    studentName: (d?.studentName as string) ?? item.studentName ?? "",
+    lokasiMagang: (d?.lokasiMagang as string) ?? item.lokasiMagang ?? "",
+    posisi: (d?.posisi as string) ?? item.posisi ?? "",
+    pembimbing: (d?.pembimbing as string) ?? item.pembimbing ?? "",
+    phone: (d?.phone as string) ?? item.phone ?? "",
+    tanggal: (d?.tanggal as string) ?? item.tanggal ?? "",
   };
+}
+
+/** Ready = all 7 criteria + required placement fields filled */
+function isFormReady(f: RowForm): boolean {
+  return (
+    CRITERIA.every((c) => !!f.ratings[c.key]) &&
+    !!f.studentName &&
+    !!f.lokasiMagang &&
+    !!f.posisi &&
+    !!f.pembimbing
+  );
 }
 
 /** Placement fields shared between card and table-row detail panel */
@@ -209,32 +127,15 @@ function PlacementFields({
   );
 }
 
-/** Confirm modal shared */
-function ConfirmModal({
-  opened, onClose, onConfirm, loading,
-}: {
-  opened: boolean; onClose: () => void; onConfirm: () => void; loading: boolean;
-}) {
-  return (
-    <Modal opened={opened} onClose={onClose} title="Konfirmasi Penilaian" centered>
-      <Stack gap="md">
-        <Text size="sm">
-          Pastikan semua data dan nilai sudah benar. Setelah dikirim, penilaian{" "}
-          <strong>tidak dapat diubah</strong> lagi.
-        </Text>
-        <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>Batal</Button>
-          <Button loading={loading} onClick={onConfirm}>Kirim</Button>
-        </Group>
-      </Stack>
-    </Modal>
-  );
+interface GradeStudentProps {
+  item: GradeItem;
+  form: RowForm;
+  onChange: (patch: Partial<RowForm>) => void;
+  mode: "card" | "row";
 }
 
-/** Mobile card renderer for one student */
-function GradeStudentCard({ item, submit, onGraded, token }: Omit<GradeStudentProps, "mode">) {
-  const s = useStudentGradeState(item, token, submit, onGraded);
-
+/** Mobile card renderer for one student — controlled by `form` + `onChange` */
+function GradeStudentCard({ item, form, onChange }: Omit<GradeStudentProps, "mode">) {
   if (item.status === "graded") {
     return (
       <Card withBorder radius="md" p="sm">
@@ -248,90 +149,76 @@ function GradeStudentCard({ item, submit, onGraded, token }: Omit<GradeStudentPr
     );
   }
 
+  const ready = isFormReady(form);
+
   return (
-    <>
-      <ConfirmModal
-        opened={s.confirmOpened}
-        onClose={s.closeConfirm}
-        onConfirm={s.handleConfirm}
-        loading={submit.isPending}
-      />
-      <Card withBorder radius="md" p="sm">
-        <Group justify="space-between" mb="sm">
-          <Text fw={600}>{item.studentName || "(Nama belum diisi)"}</Text>
+    <Card withBorder radius="md" p="sm">
+      <Group justify="space-between" mb="sm">
+        <Text fw={600}>{item.studentName || "(Nama belum diisi)"}</Text>
+        <Group gap={4}>
+          {ready && <Badge color="teal" size="sm" variant="light">Siap Kirim</Badge>}
           <Badge color="orange" size="sm">Belum Dinilai</Badge>
         </Group>
-        <Stack gap="xs">
-          <PlacementFields
-            studentName={s.studentName} setStudentName={s.setStudentName}
-            lokasiMagang={s.lokasiMagang} setLokasiMagang={s.setLokasiMagang}
-            posisi={s.posisi} setPosisi={s.setPosisi}
-            pembimbing={s.pembimbing} setPembimbing={s.setPembimbing}
-            phone={s.phone} setPhone={s.setPhone}
-            tanggal={s.tanggal} setTanggal={s.setTanggal}
-          />
-          <Divider label="Kriteria Penilaian" labelPosition="left" mt="xs" />
-          <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
-            {CRITERIA.map((c) => (
-              <Select
-                key={c.key}
-                label={c.label}
-                data={RATING_OPTIONS_FULL}
-                value={s.ratings[c.key] ?? null}
-                onChange={(v) => s.setRatings((p) => ({ ...p, [c.key]: v as Rating }))}
-                size="sm"
-              />
-            ))}
-          </SimpleGrid>
-          {s.error && <Text c="red" size="sm">{s.error}</Text>}
-          <Group justify="flex-end">
-            <Button size="sm" onClick={s.handleSubmitClick}>Kirim Penilaian</Button>
-          </Group>
-        </Stack>
-      </Card>
-    </>
+      </Group>
+      <Stack gap="xs">
+        <PlacementFields
+          studentName={form.studentName} setStudentName={(v) => onChange({ studentName: v })}
+          lokasiMagang={form.lokasiMagang} setLokasiMagang={(v) => onChange({ lokasiMagang: v })}
+          posisi={form.posisi} setPosisi={(v) => onChange({ posisi: v })}
+          pembimbing={form.pembimbing} setPembimbing={(v) => onChange({ pembimbing: v })}
+          phone={form.phone} setPhone={(v) => onChange({ phone: v })}
+          tanggal={form.tanggal} setTanggal={(v) => onChange({ tanggal: v })}
+        />
+        <Divider label="Kriteria Penilaian" labelPosition="left" mt="xs" />
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="xs">
+          {CRITERIA.map((c) => (
+            <Select
+              key={c.key}
+              label={c.label}
+              data={RATING_OPTIONS_FULL}
+              value={form.ratings[c.key] ?? null}
+              onChange={(v) => onChange({ ratings: { [c.key]: v as Rating } })}
+              size="sm"
+            />
+          ))}
+        </SimpleGrid>
+      </Stack>
+    </Card>
   );
 }
 
 /** Desktop table row renderer for one student — includes criteria Selects + expandable placement detail */
-function GradeStudentTableRow({ item, submit, onGraded, token }: Omit<GradeStudentProps, "mode">) {
-  const s = useStudentGradeState(item, token, submit, onGraded);
+function GradeStudentTableRow({ item, form, onChange }: Omit<GradeStudentProps, "mode">) {
   const [detailOpened, { toggle: toggleDetail }] = useDisclosure(false);
 
   if (item.status === "graded") {
     return (
-      <>
-        <Table.Tr style={{ backgroundColor: "var(--mantine-color-green-0)" }}>
-          <Table.Td>
-            <Text size="sm" fw={500}>{item.studentName || "(Nama belum diisi)"}</Text>
+      <Table.Tr style={{ backgroundColor: "var(--mantine-color-green-0)" }}>
+        <Table.Td>
+          <Text size="sm" fw={500}>{item.studentName || "(Nama belum diisi)"}</Text>
+        </Table.Td>
+        {CRITERIA.map((c) => (
+          <Table.Td key={c.key} ta="center">
+            <Text size="sm" fw={500}>{item.ratings?.[c.key] ?? "-"}</Text>
           </Table.Td>
-          {CRITERIA.map((c) => (
-            <Table.Td key={c.key} ta="center">
-              <Text size="sm" fw={500}>{item.ratings?.[c.key] ?? "-"}</Text>
-            </Table.Td>
-          ))}
-          <Table.Td>
-            <Badge color="green" size="sm">Dinilai</Badge>
-          </Table.Td>
-          <Table.Td ta="center">
-            <Stack gap={0}>
-              <Text size="sm" fw={600}>{item.nilaiAkhir?.toFixed(2) ?? "-"}</Text>
-              {item.kategori && <Text size="xs" c="dimmed">{item.kategori}</Text>}
-            </Stack>
-          </Table.Td>
-        </Table.Tr>
-      </>
+        ))}
+        <Table.Td>
+          <Badge color="green" size="sm">Dinilai</Badge>
+        </Table.Td>
+        <Table.Td ta="center">
+          <Stack gap={0}>
+            <Text size="sm" fw={600}>{item.nilaiAkhir?.toFixed(2) ?? "-"}</Text>
+            {item.kategori && <Text size="xs" c="dimmed">{item.kategori}</Text>}
+          </Stack>
+        </Table.Td>
+      </Table.Tr>
     );
   }
 
+  const ready = isFormReady(form);
+
   return (
     <>
-      <ConfirmModal
-        opened={s.confirmOpened}
-        onClose={s.closeConfirm}
-        onConfirm={s.handleConfirm}
-        loading={submit.isPending}
-      />
       <Table.Tr>
         <Table.Td style={{ minWidth: 140 }}>
           <Stack gap={4}>
@@ -353,8 +240,8 @@ function GradeStudentTableRow({ item, submit, onGraded, token }: Omit<GradeStude
           <Table.Td key={c.key} style={{ minWidth: 72 }}>
             <Select
               data={RATING_OPTIONS}
-              value={s.ratings[c.key] ?? null}
-              onChange={(v) => s.setRatings((p) => ({ ...p, [c.key]: v as Rating }))}
+              value={form.ratings[c.key] ?? null}
+              onChange={(v) => onChange({ ratings: { [c.key]: v as Rating } })}
               size="xs"
               styles={{ input: { textAlign: "center", paddingLeft: 4, paddingRight: 20 } }}
               aria-label={c.label}
@@ -364,13 +251,14 @@ function GradeStudentTableRow({ item, submit, onGraded, token }: Omit<GradeStude
         <Table.Td>
           <Badge color="orange" size="sm">Belum</Badge>
         </Table.Td>
-        <Table.Td style={{ minWidth: 90 }}>
-          <Stack gap={4}>
-            <Button size="xs" onClick={s.handleSubmitClick}>Kirim</Button>
-            {s.error && (
-              <Text c="red" size="xs" style={{ maxWidth: 90 }}>{s.error}</Text>
-            )}
-          </Stack>
+        <Table.Td style={{ minWidth: 70 }} ta="center">
+          {ready ? (
+            <Tooltip label="Siap dikirim" withArrow>
+              <Check size={18} weight="bold" color="var(--mantine-color-teal-6)" />
+            </Tooltip>
+          ) : (
+            <Text c="dimmed" size="sm">–</Text>
+          )}
         </Table.Td>
       </Table.Tr>
       {/* Detail expand row for placement fields */}
@@ -380,12 +268,12 @@ function GradeStudentTableRow({ item, submit, onGraded, token }: Omit<GradeStude
             <Paper p="sm" m="xs" withBorder radius="sm">
               <Text size="xs" fw={600} mb="xs" c="dimmed">Data Penempatan</Text>
               <PlacementFields
-                studentName={s.studentName} setStudentName={s.setStudentName}
-                lokasiMagang={s.lokasiMagang} setLokasiMagang={s.setLokasiMagang}
-                posisi={s.posisi} setPosisi={s.setPosisi}
-                pembimbing={s.pembimbing} setPembimbing={s.setPembimbing}
-                phone={s.phone} setPhone={s.setPhone}
-                tanggal={s.tanggal} setTanggal={s.setTanggal}
+                studentName={form.studentName} setStudentName={(v) => onChange({ studentName: v })}
+                lokasiMagang={form.lokasiMagang} setLokasiMagang={(v) => onChange({ lokasiMagang: v })}
+                posisi={form.posisi} setPosisi={(v) => onChange({ posisi: v })}
+                pembimbing={form.pembimbing} setPembimbing={(v) => onChange({ pembimbing: v })}
+                phone={form.phone} setPhone={(v) => onChange({ phone: v })}
+                tanggal={form.tanggal} setTanggal={(v) => onChange({ tanggal: v })}
               />
             </Paper>
           </Collapse>
@@ -395,33 +283,31 @@ function GradeStudentTableRow({ item, submit, onGraded, token }: Omit<GradeStude
   );
 }
 
-function GradeStudent({ item, submit, onGraded, token, mode }: GradeStudentProps) {
+function GradeStudent({ item, form, onChange, mode }: GradeStudentProps) {
   if (mode === "row") {
-    return <GradeStudentTableRow item={item} submit={submit} onGraded={onGraded} token={token} />;
+    return <GradeStudentTableRow item={item} form={form} onChange={onChange} />;
   }
-  return <GradeStudentCard item={item} submit={submit} onGraded={onGraded} token={token} />;
+  return <GradeStudentCard item={item} form={form} onChange={onChange} />;
 }
 
 interface MassGradingPanelProps {
   items: GradeItem[];
-  submit: ReturnType<typeof useGrade>["submit"];
-  onDone: () => void;
+  onApply: (ids: string[], ratings: Partial<InternshipRatings>) => void;
 }
 
-function MassGradingPanel({ items, submit, onDone }: MassGradingPanelProps) {
+/** "Penilaian Massal" panel — applies shared criteria into selected rows'
+ * forms. It never submits; the page-level "Kirim Semua" button does that. */
+function MassGradingPanel({ items, onApply }: MassGradingPanelProps) {
   const pendingItems = items.filter((i) => i.status !== "graded");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [massRatings, setMassRatings] = useState<Partial<InternshipRatings>>({});
-  const [confirmOpened, { open: openConfirm, close: closeConfirm }] = useDisclosure(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const allSelected =
     pendingItems.length > 0 && selectedIds.length === pendingItems.length;
   const someSelected = selectedIds.length > 0 && !allSelected;
 
   const allCriteriaFilled = CRITERIA.every((c) => !!massRatings[c.key]);
-  const canSubmit = selectedIds.length > 0 && allCriteriaFilled;
+  const canApply = selectedIds.length > 0 && allCriteriaFilled;
 
   function toggleSelectAll() {
     if (allSelected) {
@@ -437,163 +323,190 @@ function MassGradingPanel({ items, submit, onDone }: MassGradingPanelProps) {
     );
   }
 
-  function handleSubmitClick() {
-    if (!canSubmit) return;
-    setError("");
-    openConfirm();
-  }
-
-  async function handleConfirm() {
-    closeConfirm();
-    setLoading(true);
-    let successCount = 0;
-
-    // Look up items by id at submit time from the prop (server data)
-    const selectedItems = items.filter((i) => selectedIds.includes(i.id));
-
-    for (const item of selectedItems) {
-      try {
-        await submit.mutateAsync({
-          internshipId: item.id,
-          ratings: massRatings as InternshipRatings,
-          studentName: item.studentName,
-          lokasiMagang: item.lokasiMagang,
-          posisi: item.posisi,
-          pembimbing: item.pembimbing,
-          phone: item.phone,
-          tanggal: item.tanggal,
-        });
-        successCount++;
-      } catch (e) {
-        // Skip 409 (already graded) — treat as success for counting purposes
-        if (axios.isAxiosError(e) && e.response?.status === 409) {
-          successCount++;
-        }
-        // Other errors: skip this student and continue
-      }
-    }
-
-    setLoading(false);
-    await onDone();
-    setSelectedIds([]);
-    setMassRatings({});
+  function handleApply() {
+    if (!canApply) return;
+    onApply(selectedIds, massRatings);
     notifications.show({
-      color: "green",
-      title: "Penilaian Massal Berhasil",
-      message: `Berhasil menilai ${successCount} siswa`,
+      color: "blue",
+      title: "Nilai Diterapkan",
+      message: `Nilai diterapkan ke ${selectedIds.length} siswa. Periksa lalu kirim.`,
     });
   }
 
   if (pendingItems.length === 0) return null;
 
   return (
-    <>
-      <Modal
-        opened={confirmOpened}
-        onClose={closeConfirm}
-        title="Konfirmasi Penilaian Massal"
-        centered
-      >
-        <Stack gap="md">
-          <Text size="sm">
-            Menilai <strong>{selectedIds.length} siswa</strong> dengan nilai yang sama.
-            Setelah dikirim tidak dapat diubah.
-          </Text>
-          <Group justify="flex-end">
-            <Button variant="default" onClick={closeConfirm}>
-              Batal
-            </Button>
-            <Button color="blue" loading={loading} onClick={handleConfirm}>
-              Kirim Semua
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+    <Paper withBorder p="md" radius="md">
+      <Stack gap="md">
+        <Title order={5}>Penilaian Massal (Beberapa Siswa)</Title>
+        <Text size="sm" c="dimmed">
+          Pilih siswa yang belum dinilai, isi 7 kriteria sekali, lalu terapkan ke tabel.
+          Periksa data tiap siswa, baru kirim semua sekaligus di bawah.
+        </Text>
 
-      <Paper withBorder p="md" radius="md">
-        <Stack gap="md">
-          <Title order={5}>Penilaian Massal (Beberapa Siswa)</Title>
-          <Text size="sm" c="dimmed">
-            Pilih siswa yang belum dinilai, isi 7 kriteria sekali, lalu kirim untuk semua sekaligus.
-          </Text>
+        <Divider label="Pilih Siswa" labelPosition="left" />
 
-          <Divider label="Pilih Siswa" labelPosition="left" />
-
-          <Stack gap="xs">
+        <Stack gap="xs">
+          <Checkbox
+            label="Pilih semua"
+            checked={allSelected}
+            indeterminate={someSelected}
+            onChange={toggleSelectAll}
+            fw={500}
+          />
+          {pendingItems.map((item) => (
             <Checkbox
-              label="Pilih semua"
-              checked={allSelected}
-              indeterminate={someSelected}
-              onChange={toggleSelectAll}
-              fw={500}
+              key={item.id}
+              label={item.studentName || "(Nama belum diisi)"}
+              checked={selectedIds.includes(item.id)}
+              onChange={() => toggleItem(item.id)}
+              pl="md"
             />
-            {pendingItems.map((item) => (
-              <Checkbox
-                key={item.id}
-                label={item.studentName || "(Nama belum diisi)"}
-                checked={selectedIds.includes(item.id)}
-                onChange={() => toggleItem(item.id)}
-                pl="md"
-              />
-            ))}
-          </Stack>
-
-          <Divider label="Kriteria Penilaian" labelPosition="left" />
-
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
-            {CRITERIA.map((c) => (
-              <Select
-                key={c.key}
-                label={c.label}
-                data={RATING_OPTIONS_FULL}
-                value={massRatings[c.key] ?? null}
-                onChange={(v) =>
-                  setMassRatings((p) => ({ ...p, [c.key]: v as Rating }))
-                }
-                size="sm"
-              />
-            ))}
-          </SimpleGrid>
-
-          {!allCriteriaFilled && selectedIds.length > 0 && (
-            <Text size="sm" c="orange">
-              Lengkapi semua 7 kriteria penilaian sebelum mengirim.
-            </Text>
-          )}
-
-          {error && <Text size="sm" c="red">{error}</Text>}
-
-          <Group justify="flex-end">
-            <Button
-              disabled={!canSubmit}
-              loading={loading}
-              onClick={handleSubmitClick}
-            >
-              Kirim Penilaian Terpilih ({selectedIds.length} siswa)
-            </Button>
-          </Group>
+          ))}
         </Stack>
-      </Paper>
-    </>
+
+        <Divider label="Kriteria Penilaian" labelPosition="left" />
+
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm">
+          {CRITERIA.map((c) => (
+            <Select
+              key={c.key}
+              label={c.label}
+              data={RATING_OPTIONS_FULL}
+              value={massRatings[c.key] ?? null}
+              onChange={(v) =>
+                setMassRatings((p) => ({ ...p, [c.key]: v as Rating }))
+              }
+              size="sm"
+            />
+          ))}
+        </SimpleGrid>
+
+        {!allCriteriaFilled && selectedIds.length > 0 && (
+          <Text size="sm" c="orange">
+            Lengkapi semua 7 kriteria penilaian sebelum menerapkan.
+          </Text>
+        )}
+
+        <Group justify="flex-end">
+          <Button disabled={!canApply} onClick={handleApply}>
+            Terapkan ke {selectedIds.length} Siswa
+          </Button>
+        </Group>
+      </Stack>
+    </Paper>
   );
 }
 
 const GradePage: NextPageWithLayout = () => {
   const router = useRouter();
-  const token = router.query.token as string | undefined;
+  const token = (router.query.token as string | undefined) ?? "";
 
-  const { info, submit } = useGrade(token);
+  const { info, submit } = useGrade(token || undefined);
 
   // SSR-safe: undefined on server, resolves on client
   const isDesktop = useMediaQuery("(min-width: 62em)");
 
+  const [forms, setForms] = useState<Record<string, RowForm>>({});
+  const [submitAllOpened, { open: openSubmitAll, close: closeSubmitAll }] = useDisclosure(false);
+  const [submitAllLoading, setSubmitAllLoading] = useState(false);
+
   const notFound = info.isError;
   const loading = info.isLoading || !info.data;
+
+  const items = info.data?.items ?? [];
+
+  function getForm(item: GradeItem): RowForm {
+    return forms[item.id] ?? defaultRowForm(item, token);
+  }
+
+  function handleFormChange(item: GradeItem, patch: Partial<RowForm>) {
+    setForms((prev) => {
+      const cur = prev[item.id] ?? defaultRowForm(item, token);
+      const next: RowForm = {
+        ...cur,
+        ...patch,
+        ratings: patch.ratings ? { ...cur.ratings, ...patch.ratings } : cur.ratings,
+      };
+      useDraftStore.getState().setDraft(draftKeyFor(token, item.id), next as unknown as Record<string, unknown>);
+      return { ...prev, [item.id]: next };
+    });
+  }
+
+  function handleMassApply(ids: string[], ratings: Partial<InternshipRatings>) {
+    const byId = new Map(items.map((i) => [i.id, i]));
+    setForms((prev) => {
+      const next = { ...prev };
+      for (const id of ids) {
+        const item = byId.get(id);
+        if (!item) continue;
+        const cur = prev[id] ?? defaultRowForm(item, token);
+        const merged: RowForm = { ...cur, ratings: { ...cur.ratings, ...ratings } };
+        next[id] = merged;
+        useDraftStore.getState().setDraft(draftKeyFor(token, id), merged as unknown as Record<string, unknown>);
+      }
+      return next;
+    });
+  }
+
+  const pendingItems = items.filter((i) => i.status !== "graded");
+  const readyItems = pendingItems.filter((i) => isFormReady(getForm(i)));
+  const notReadyItems = pendingItems.filter((i) => !isFormReady(getForm(i)));
+  const readyIds = readyItems.map((i) => i.id);
+
+  async function handleSubmitAllConfirm() {
+    closeSubmitAll();
+    setSubmitAllLoading(true);
+    let successCount = 0;
+    const failedNames: string[] = [];
+
+    for (const item of readyItems) {
+      const f = getForm(item);
+      try {
+        await submit.mutateAsync({
+          internshipId: item.id,
+          ratings: f.ratings as InternshipRatings,
+          studentName: f.studentName,
+          lokasiMagang: f.lokasiMagang,
+          posisi: f.posisi,
+          pembimbing: f.pembimbing,
+          phone: f.phone,
+          tanggal: f.tanggal,
+        });
+        successCount++;
+        useDraftStore.getState().clearDraft(draftKeyFor(token, item.id));
+      } catch (e) {
+        if (axios.isAxiosError(e) && e.response?.status === 409) {
+          // Already graded elsewhere — treat as done
+          successCount++;
+          useDraftStore.getState().clearDraft(draftKeyFor(token, item.id));
+        } else {
+          failedNames.push(f.studentName || item.studentName || "(Nama belum diisi)");
+        }
+      }
+    }
+
+    setSubmitAllLoading(false);
+    await info.refetch();
+
+    notifications.show({
+      color: "green",
+      title: "Penilaian Terkirim",
+      message: `Berhasil menilai ${successCount} siswa`,
+    });
+    if (failedNames.length > 0) {
+      notifications.show({
+        color: "red",
+        title: "Sebagian Gagal Dikirim",
+        message: `Gagal mengirim untuk: ${failedNames.join(", ")}`,
+      });
+    }
+  }
 
   if (notFound) return <Alert color="red" maw={500} mx="auto" mt={80}>Link tidak valid atau token tidak ditemukan.</Alert>;
   if (loading) return <Text ta="center" mt={80}>Memuat data penilaian...</Text>;
 
-  const { perusahaan, pic, items } = info.data!;
+  const { perusahaan, pic } = info.data!;
 
   const graded = items.filter((i) => i.status === "graded").length;
   const total = items.length;
@@ -634,11 +547,49 @@ const GradePage: NextPageWithLayout = () => {
     >
       {headerInfo}
 
-      <MassGradingPanel
-        items={items}
-        submit={submit}
-        onDone={info.refetch}
-      />
+      <MassGradingPanel items={items} onApply={handleMassApply} />
+
+      {pendingItems.length > 0 && (
+        <>
+          <Modal
+            opened={submitAllOpened}
+            onClose={closeSubmitAll}
+            title="Konfirmasi Kirim Semua Penilaian"
+            centered
+          >
+            <Stack gap="md">
+              <Text size="sm">
+                Kirim penilaian untuk <strong>{readyIds.length} siswa</strong>? Setelah
+                dikirim tidak dapat diubah.
+              </Text>
+              <Group justify="flex-end">
+                <Button variant="default" onClick={closeSubmitAll}>Batal</Button>
+                <Button loading={submitAllLoading} onClick={handleSubmitAllConfirm}>Kirim</Button>
+              </Group>
+            </Stack>
+          </Modal>
+
+          <Paper withBorder p="md" radius="md">
+            <Group justify="space-between" wrap="wrap" align="flex-start">
+              <Stack gap={4}>
+                <Button
+                  size="md"
+                  disabled={readyIds.length === 0}
+                  onClick={openSubmitAll}
+                >
+                  Kirim Semua Penilaian ({readyIds.length} siap)
+                </Button>
+                {notReadyItems.length > 0 && (
+                  <Text size="sm" c="dimmed" maw={520}>
+                    {notReadyItems.length} siswa belum lengkap:{" "}
+                    {notReadyItems.map((i) => i.studentName || "(Nama belum diisi)").join(", ")}
+                  </Text>
+                )}
+              </Stack>
+            </Group>
+          </Paper>
+        </>
+      )}
 
       {/* Desktop: Table with criteria as columns */}
       {isDesktop ? (
@@ -659,7 +610,7 @@ const GradePage: NextPageWithLayout = () => {
                     </Table.Th>
                   ))}
                   <Table.Th style={{ minWidth: 80 }}>Status</Table.Th>
-                  <Table.Th style={{ minWidth: 90 }}>Kirim</Table.Th>
+                  <Table.Th style={{ minWidth: 70 }}>Siap</Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
@@ -667,9 +618,8 @@ const GradePage: NextPageWithLayout = () => {
                   <GradeStudent
                     key={item.id}
                     item={item}
-                    submit={submit}
-                    onGraded={() => info.refetch()}
-                    token={token ?? ""}
+                    form={getForm(item)}
+                    onChange={(patch) => handleFormChange(item, patch)}
                     mode="row"
                   />
                 ))}
@@ -684,9 +634,8 @@ const GradePage: NextPageWithLayout = () => {
             <GradeStudent
               key={item.id}
               item={item}
-              submit={submit}
-              onGraded={() => info.refetch()}
-              token={token ?? ""}
+              form={getForm(item)}
+              onChange={(patch) => handleFormChange(item, patch)}
               mode="card"
             />
           ))}
