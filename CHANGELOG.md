@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/paludevhouse/personal-development-program/compare/v1.9.0...v1.9.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* read the "Template" sheet on import, not sheet index 0 ([c38333d](https://github.com/paludevhouse/personal-development-program/commit/c38333d6e1bc4a5303e0ee579f259732f64665ac))
+
 # [1.9.0](https://github.com/paludevhouse/personal-development-program/compare/v1.8.2...v1.9.0) (2026-07-02)
 
 
