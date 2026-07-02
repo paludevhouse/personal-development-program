@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/paludevhouse/personal-development-program/compare/v1.3.0...v1.4.0) (2026-07-02)
+
+
+### Features
+
+* student status flow — Aktif/Nonaktif/Semua tabs + bulk status change (redesign phase B) ([ac5f203](https://github.com/paludevhouse/personal-development-program/commit/ac5f2038d488aeab957a360d6974367e77c21f8b))
+
 # [1.3.0](https://github.com/paludevhouse/personal-development-program/compare/v1.2.1...v1.3.0) (2026-07-02)
 
 
