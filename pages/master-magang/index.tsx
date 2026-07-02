@@ -32,11 +32,9 @@ export default function MasterMagangPage() {
   return (
     <Stack>
       <PageHeader />
-      <Group>
+      <Group align="end">
         <Button component={Link} href="/master-magang/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
         <Button variant="light" disabled={!companies.length} onClick={() => XLSX.writeFile(buildCompaniesWorkbook(companies), "master-magang.xlsx")} leftSection={<DownloadSimple size={16} weight="bold" />}>Ekspor Excel</Button>
-      </Group>
-      <Group align="end">
         <FormModal title="Tambah Perusahaan">
           {(close) => (
             <form onSubmit={form.onSubmit((values) => { create.mutate({ ...values, idempotencyKey: idemKey }, { onSuccess: () => setIdemKey(crypto.randomUUID()) }); form.reset(); close(); })}>
