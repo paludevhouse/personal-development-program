@@ -57,7 +57,7 @@ export function buildGradesWorkbook(
       "Student Number": opts.nisById?.[it.studentId] ?? "",
       "Place": place,
       "Position": position,
-      "Supervisor": it.pembimbing ?? "",
+      "Supervisor": formatIndonesianName(it.pembimbing ?? ""),
       "Internship Dates": it.tanggal ?? "",
       "Discipline": it.ratings?.kedisiplinan ?? "",
       "Cooperation": it.ratings?.kerjasama ?? "",

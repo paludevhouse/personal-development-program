@@ -169,7 +169,7 @@ export default function InternshipsPage() {
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<Briefcase size={44} weight="duotone" />} title="Belum ada data" description="Pilih tahun ajaran lalu tambah penempatan magang." />
       ) : (
-        <Table.ScrollContainer minWidth={1200} maxHeight="calc(100vh - 260px)">
+        <Table.ScrollContainer minWidth={1200} maxHeight="calc(100vh - 320px)">
           <Table stickyHeader>
             <Table.Thead>
               <Table.Tr>

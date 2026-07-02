@@ -54,7 +54,7 @@ export default function AcademicYearsPage() {
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<CalendarBlank size={44} weight="duotone" />} title="Belum ada data" description="Tambah tahun ajaran untuk memulai." />
       ) : (
-        <Table.ScrollContainer minWidth={500} maxHeight="calc(100vh - 260px)">
+        <Table.ScrollContainer minWidth={500} maxHeight="calc(100vh - 430px)">
           <Table stickyHeader>
             <Table.Thead><Table.Tr><Table.Th>Tahun</Table.Th><Table.Th>Aktif</Table.Th><Table.Th /></Table.Tr></Table.Thead>
             <Table.Tbody>

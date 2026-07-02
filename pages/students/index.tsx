@@ -262,7 +262,7 @@ export default function StudentsPage() {
       ) : rows.length === 0 ? (
         <StateView icon={<UsersThree size={44} weight="duotone" />} title="Tidak ada siswa" description="Tidak ada siswa yang cocok dengan filter ini." />
       ) : (
-        <Table.ScrollContainer minWidth={1000} maxHeight="calc(100vh - 260px)">
+        <Table.ScrollContainer minWidth={1000} maxHeight="calc(100vh - 430px)">
           <Table stickyHeader>
             <Table.Thead>
               <Table.Tr>
