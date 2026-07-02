@@ -1,3 +1,15 @@
+## [1.8.2](https://github.com/paludevhouse/personal-development-program/compare/v1.8.1...v1.8.2) (2026-07-02)
+
+
+### Bug Fixes
+
+* require a valid session before ETag/304 freshness responses ([fe9161d](https://github.com/paludevhouse/personal-development-program/commit/fe9161d25e198eab63b1f146eff28a12582a760e))
+
+
+### Performance Improvements
+
+* collection-version ETag + 304 on list endpoints + single dashboard aggregate ([310fa50](https://github.com/paludevhouse/personal-development-program/commit/310fa501794efe6a8f464541c961939603a6c510))
+
 ## [1.8.1](https://github.com/paludevhouse/personal-development-program/compare/v1.8.0...v1.8.1) (2026-07-02)
 
 
