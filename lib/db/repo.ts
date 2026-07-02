@@ -1,4 +1,5 @@
 import { getDb } from "../firebase/admin";
+import { bumpVersion } from "./versions";
 
 type Filter = [field: string, value: unknown];
 
@@ -19,14 +20,17 @@ export const repo = {
   },
   async create(col: string, data: Record<string, unknown>) {
     const ref = await getDb().collection(col).add(data);
+    if (col !== "meta") await bumpVersion(col);
     return { id: ref.id, ...data };
   },
   async update(col: string, id: string, data: Record<string, unknown>) {
     await getDb().collection(col).doc(id).set(data, { merge: true });
+    if (col !== "meta") await bumpVersion(col);
     return { id, ...data };
   },
   async remove(col: string, id: string) {
     await getDb().collection(col).doc(id).delete();
+    if (col !== "meta") await bumpVersion(col);
     return { ok: true };
   },
   async createWithId(col: string, id: string, data: Record<string, unknown>) {
@@ -34,6 +38,7 @@ export const repo = {
     const snap = await ref.get();
     if (snap.exists) throw new Error("exists");
     await ref.set(data);
+    if (col !== "meta") await bumpVersion(col);
     return { id, ...data };
   },
   async createWithKey(col: string, data: Record<string, unknown>, key?: string) {

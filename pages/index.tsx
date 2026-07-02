@@ -14,12 +14,7 @@ import {
   ChartBar,
   GraduationCap,
 } from "@phosphor-icons/react";
-import { useAcademicYears } from "@/lib/hooks/useAcademicYears";
-import { useStudentList } from "@/lib/hooks/useStudentList";
-import { useClasses } from "@/lib/hooks/useClasses";
-import { useInternships } from "@/lib/hooks/useInternships";
-import { useCounseling } from "@/lib/hooks/useCounseling";
-import { useWawancara } from "@/lib/hooks/useWawancara";
+import { useDashboard } from "@/lib/hooks/useDashboard";
 
 const LINKS = [
   { href: "/students", title: "Siswa", desc: "Kelola data & status siswa", Icon: StudentIcon },
@@ -54,39 +49,30 @@ function StatCard({
 }
 
 export default function Home() {
-  const years = useAcademicYears();
-  const activeYear = (years.data.data ?? []).find((y) => y.isActive) ?? null;
-  const yearId = activeYear?.id;
+  const dashboardQ = useDashboard();
+  const loading = dashboardQ.isLoading;
+  const d = dashboardQ.data;
 
-  const studentsQ = useStudentList();
-  const classesQ = useClasses(yearId);
-  const internshipsQ = useInternships(yearId);
-  const counselingQ = useCounseling();
-  const wawancaraQ = useWawancara();
+  const activeYear = d?.activeYear ?? null;
 
-  const students = studentsQ.data ?? [];
-  const totalSiswa = students.length;
-  const aktif = students.filter((s) => (s.status ?? "aktif") === "aktif").length;
-  const nonaktif = totalSiswa - aktif;
+  const totalSiswa = d?.siswa.total ?? 0;
+  const aktif = d?.siswa.aktif ?? 0;
+  const nonaktif = d?.siswa.nonaktif ?? 0;
 
-  const kelasCount = (classesQ.data.data ?? []).length;
+  const kelasCount = d?.kelas ?? 0;
 
-  const internships = internshipsQ.data.data ?? [];
-  const magangTotal = internships.length;
-  const dinilai = internships.filter((i) => i.status === "graded").length;
-  const gradedScores = internships
-    .filter((i) => i.status === "graded" && i.nilaiAkhir != null)
-    .map((i) => i.nilaiAkhir as number);
-  const avgNilai = gradedScores.length ? gradedScores.reduce((a, b) => a + b, 0) / gradedScores.length : null;
+  const magangTotal = d?.magang.total ?? 0;
+  const dinilai = d?.magang.dinilai ?? 0;
+  const avgNilai = d?.magang.avgNilai ?? null;
   const gradedPct = magangTotal ? Math.round((dinilai / magangTotal) * 100) : 0;
 
-  const counseling = counselingQ.data.data ?? [];
-  const konselingOpen = counseling.filter((c) => c.status === "open").length;
+  const konselingTotal = d?.konseling.total ?? 0;
+  const konselingOpen = d?.konseling.open ?? 0;
 
-  const wawancara = wawancaraQ.data.data ?? [];
-  const wawancaraDijadwalkan = wawancara.filter((w) => w.status === "dijadwalkan").length;
+  const wawancaraTotal = d?.wawancara.total ?? 0;
+  const wawancaraDijadwalkan = d?.wawancara.dijadwalkan ?? 0;
 
-  const dash = (loading: boolean, v: React.ReactNode) => (loading ? "…" : v);
+  const dash = (isLoading: boolean, v: React.ReactNode) => (isLoading ? "…" : v);
 
   return (
     <Stack>
@@ -104,18 +90,18 @@ export default function Home() {
 
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }}>
         <StatCard Icon={StudentIcon} label="Siswa Aktif" color="brand" href="/students"
-          value={dash(studentsQ.isLoading, aktif)} sub={`${nonaktif} nonaktif · ${totalSiswa} total`} />
+          value={dash(loading, aktif)} sub={`${nonaktif} nonaktif · ${totalSiswa} total`} />
         <StatCard Icon={Chalkboard} label="Kelas" color="grape" href="/classes"
-          value={dash(classesQ.data.isLoading, kelasCount)} sub={activeYear ? `Tahun ${activeYear.year}` : "—"} />
+          value={dash(loading, kelasCount)} sub={activeYear ? `Tahun ${activeYear.year}` : "—"} />
         <StatCard Icon={GraduationCap} label="Progres Penilaian Magang" color="teal" href="/internships"
-          value={dash(internshipsQ.data.isLoading, `${dinilai}/${magangTotal}`)} sub={`${gradedPct}% sudah dinilai`} progress={gradedPct} />
+          value={dash(loading, `${dinilai}/${magangTotal}`)} sub={`${gradedPct}% sudah dinilai`} progress={gradedPct} />
         <StatCard Icon={ChartBar} label="Rata-rata Nilai Magang" color="orange" href="/laporan-magang"
-          value={dash(internshipsQ.data.isLoading, avgNilai != null ? avgNilai.toFixed(1) : "—")}
-          sub={gradedScores.length ? `dari ${gradedScores.length} siswa dinilai` : "belum ada nilai"} />
+          value={dash(loading, avgNilai != null ? avgNilai.toFixed(1) : "—")}
+          sub={dinilai ? `dari ${dinilai} siswa dinilai` : "belum ada nilai"} />
         <StatCard Icon={ChatCircleText} label="Konseling" color="blue" href="/counseling"
-          value={dash(counselingQ.data.isLoading, counseling.length)} sub={`${konselingOpen} sesi terbuka`} />
+          value={dash(loading, konselingTotal)} sub={`${konselingOpen} sesi terbuka`} />
         <StatCard Icon={ClipboardText} label="Wawancara Penjurusan" color="indigo" href="/wawancara"
-          value={dash(wawancaraQ.data.isLoading, wawancara.length)} sub={`${wawancaraDijadwalkan} dijadwalkan`} />
+          value={dash(loading, wawancaraTotal)} sub={`${wawancaraDijadwalkan} dijadwalkan`} />
       </SimpleGrid>
 
       <Title order={4} mt="md">Menu</Title>

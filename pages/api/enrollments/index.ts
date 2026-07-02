@@ -95,4 +95,4 @@ export default methods({
 
     return { ok: true };
   },
-});
+}, { etag: { GET: ["enrollments", "classes"] } });

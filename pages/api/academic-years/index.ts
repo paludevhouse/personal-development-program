@@ -19,4 +19,4 @@ export default methods({
     if (input.isActive) await deactivateOthers(created.id);
     return created;
   },
-});
+}, { etag: { GET: ["academicYears"] } });

@@ -48,4 +48,4 @@ export default methods({
       throw e;
     }
   },
-});
+}, { etag: { GET: ["students", "enrollments"] } });

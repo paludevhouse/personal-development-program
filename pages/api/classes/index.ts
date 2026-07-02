@@ -17,4 +17,4 @@ export default methods({
     catch (e) { throw new ApiError(400, (e as Error).message); }
     return repo.createWithKey("classes", { ...input }, key);
   },
-});
+}, { etag: { GET: ["classes"] } });

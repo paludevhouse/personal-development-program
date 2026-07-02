@@ -30,4 +30,4 @@ export default methods({
       ratings: EMPTY_RATINGS, nilaiAkhir: null, kategori: null, tanggal: b.tanggal ?? "",
     }, key);
   },
-});
+}, { etag: { GET: ["internships"] } });
