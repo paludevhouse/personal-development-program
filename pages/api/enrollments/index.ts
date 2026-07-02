@@ -76,4 +76,23 @@ export default methods({
     );
     return rows;
   },
+  DELETE: async (req) => {
+    await requireAdmin(req);
+    const studentId = req.query.studentId as string | undefined;
+    const classId = req.query.classId as string | undefined;
+    if (!studentId || !classId) throw new ApiError(400, "studentId dan classId diperlukan");
+
+    const matches = await repo.list("enrollments", [
+      ["studentId", studentId],
+      ["classId", classId],
+    ]);
+    await Promise.all(matches.map((e) => repo.remove("enrollments", e.id)));
+
+    const student = await repo.get("students", studentId);
+    if (student && student.classId === classId) {
+      await repo.update("students", studentId, { classId: "", className: "", academicYearId: "" });
+    }
+
+    return { ok: true };
+  },
 });

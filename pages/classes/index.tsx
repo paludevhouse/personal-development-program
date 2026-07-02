@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { z } from "zod";
-import { Button, Group, Select, Stack, Table, TextInput, Modal, ActionIcon, Tooltip } from "@mantine/core";
+import { Anchor, Button, Group, Select, Stack, Table, TextInput, Modal, ActionIcon, Tooltip } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
@@ -85,7 +85,10 @@ export default function ClassesPage() {
             <Table.Tbody>
               {(data.data ?? []).map((c) => (
                 <Table.Tr key={c.id}>
-                  <Table.Td>{c.name}</Table.Td><Table.Td>{c.waliKelas}</Table.Td>
+                  <Table.Td>
+                    <Anchor component={Link} href={`/classes/${c.id}`}>{c.name}</Anchor>
+                  </Table.Td>
+                  <Table.Td>{c.waliKelas}</Table.Td>
                   <Table.Td>
                     <Group gap="xs">
                       <EditClass cls={c} onSave={(v) => update.mutate(v)} />

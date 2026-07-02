@@ -1,8 +1,15 @@
-import { methods } from "@/lib/api/respond";
+import { methods, ApiError } from "@/lib/api/respond";
 import { repo } from "@/lib/db/repo";
 import { requireAdmin } from "@/lib/auth/session";
 
 export default methods({
+  GET: async (req) => {
+    await requireAdmin(req);
+    const id = req.query.id as string;
+    const cls = await repo.get("classes", id);
+    if (!cls) throw new ApiError(404, "Kelas tidak ditemukan");
+    return cls;
+  },
   PUT: async (req) => {
     await requireAdmin(req);
     const id = req.query.id as string;
