@@ -4,7 +4,7 @@ import { Anchor, Button, Group, Select, Stack, Table, TextInput, Modal, ActionIc
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { zodResolver } from "mantine-form-zod-resolver";
-import { WarningOctagon, Chalkboard, PencilSimple, UploadSimple } from "@phosphor-icons/react";
+import { WarningOctagon, Chalkboard, PencilSimple, UploadSimple, ArrowsClockwise } from "@phosphor-icons/react";
 import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { StateView } from "@/components/StateView";
@@ -71,6 +71,7 @@ export default function ClassesPage() {
           )}
         </FormModal>
         <Button component={Link} href="/classes/import" variant="light" leftSection={<UploadSimple size={16} weight="bold" />}>Impor Excel</Button>
+        <Button component={Link} href="/classes/promote" variant="light" leftSection={<ArrowsClockwise size={16} weight="bold" />}>Naik Kelas</Button>
       </Group>
       {data.isLoading ? (
         <LoadingView />

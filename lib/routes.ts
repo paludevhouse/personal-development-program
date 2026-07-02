@@ -9,6 +9,7 @@ export const ROUTES: Record<string, RouteMeta> = {
   "/students/[id]": { title: "Detail Siswa", description: "Riwayat kelas, magang, konseling, wawancara" },
   "/classes": { title: "Kelas", description: "Kelola kelas per tahun ajaran" },
   "/classes/[id]": { title: "Detail Kelas", description: "Kelola siswa dalam kelas" },
+  "/classes/promote": { title: "Naik Kelas", description: "Promosikan kelas ke tahun ajaran berikutnya" },
   "/academic-years": { title: "Tahun Ajaran", description: "Kelola tahun ajaran" },
   "/internships": { title: "Magang", description: "Penempatan dan penilaian magang siswa" },
   "/master-magang": { title: "Master Magang", description: "Data perusahaan, PIC, dan kontak" },
