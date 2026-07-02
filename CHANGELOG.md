@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/paludevhouse/personal-development-program/compare/v1.2.1...v1.3.0) (2026-07-02)
+
+
+### Features
+
+* class roster view /classes/[id] — add/remove students (redesign phase A) ([d18f8f3](https://github.com/paludevhouse/personal-development-program/commit/d18f8f38e0411e8eb933483de63528ab5c70c556))
+
 ## [1.2.1](https://github.com/paludevhouse/personal-development-program/compare/v1.2.0...v1.2.1) (2026-07-02)
 
 
