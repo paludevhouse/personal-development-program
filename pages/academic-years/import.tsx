@@ -55,7 +55,7 @@ export default function ImportAcademicYearsPage() {
     }
     const buf = await file.arrayBuffer();
     const wb = XLSX.read(buf);
-    const ws = wb.Sheets[wb.SheetNames[0]];
+    const ws = wb.Sheets["Template"] ?? wb.Sheets[wb.SheetNames[0]];
     const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws);
 
     // Map Excel rows (with Indo headers) back to English keys
