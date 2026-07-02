@@ -10,12 +10,15 @@ import { useRouter } from "next/router";
 import { MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { notifications } from "@mantine/notifications";
 import { getErrorMessage, getErrorStatus } from "@/lib/api/errorMessage";
 import { AppLayout } from "@/components/AppLayout";
 import { routeMeta, APP_NAME } from "@/lib/routes";
 import { createAppTheme } from "@/lib/theme";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import pkg from "../package.json";
 
 const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], display: "swap" });
 
@@ -42,13 +45,20 @@ export default function App({ Component, pageProps }: AppProps & { Component: Ne
     defaultOptions: {
       queries: {
         retry: 1,
-        staleTime: 5 * 60_000,
-        gcTime: 10 * 60_000,
+        staleTime: 10 * 60_000,
+        gcTime: 24 * 60 * 60_000,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
       },
     },
   }));
+  const persister = useMemo(
+    () =>
+      typeof window !== "undefined"
+        ? createSyncStoragePersister({ storage: window.localStorage, key: "pedevpro-query-cache" })
+        : undefined,
+    []
+  );
   const { pathname } = useRouter();
   const meta = routeMeta(pathname);
   const pageTitle = pathname === "/" ? APP_NAME : `${meta.title} · ${APP_NAME}`;
@@ -61,9 +71,23 @@ export default function App({ Component, pageProps }: AppProps & { Component: Ne
       </Head>
       <MantineProvider theme={theme}>
         <Notifications />
-        <QueryClientProvider client={qc}>
-          {getLayout(<Component {...pageProps} />)}
-        </QueryClientProvider>
+        {persister ? (
+          <PersistQueryClientProvider
+            client={qc}
+            persistOptions={{
+              persister,
+              maxAge: 24 * 60 * 60 * 1000,
+              buster: pkg.version,
+              dehydrateOptions: {
+                shouldDehydrateQuery: (q) => q.state.status === "success" && q.queryKey[0] !== "grade",
+              },
+            }}
+          >
+            {getLayout(<Component {...pageProps} />)}
+          </PersistQueryClientProvider>
+        ) : (
+          <QueryClientProvider client={qc}>{getLayout(<Component {...pageProps} />)}</QueryClientProvider>
+        )}
       </MantineProvider>
     </>
   );

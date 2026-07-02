@@ -17,6 +17,9 @@ export function useRemoveFromClass() {
       qc.invalidateQueries({ queryKey: ["students"] });
       qc.invalidateQueries({ queryKey: ["student-list"] });
       qc.invalidateQueries({ queryKey: ["students", "class", variables.classId] });
+      qc.invalidateQueries({ queryKey: ["classes"] });
+      qc.invalidateQueries({ queryKey: ["enrollments"] });
+      qc.invalidateQueries({ queryKey: ["enrollments-year"] });
     },
   });
 }

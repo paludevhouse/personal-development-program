@@ -7,5 +7,6 @@ export function useClassRoster(classId?: string) {
     queryKey: ["students", "class", classId],
     queryFn: ({ signal }) => getJson<Student[]>(`/api/students?classId=${classId}`, signal),
     enabled: !!classId,
+    staleTime: 30 * 60_000,
   });
 }

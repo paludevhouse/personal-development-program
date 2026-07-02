@@ -7,5 +7,6 @@ export function useClass(id?: string) {
     queryKey: ["class", id],
     queryFn: ({ signal }) => getJson<SchoolClass>(`/api/classes/${id}`, signal),
     enabled: !!id,
+    staleTime: 30 * 60_000,
   });
 }

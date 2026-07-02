@@ -16,5 +16,6 @@ export function useEnrollmentsByYear(academicYearId?: string | null) {
     queryFn: ({ signal }) =>
       getJson<EnrollmentByYearRow[]>(`/api/enrollments?academicYearId=${academicYearId}`, signal),
     enabled: !!academicYearId,
+    staleTime: 30 * 60_000,
   });
 }

@@ -15,5 +15,6 @@ export function useEnrollments(studentId?: string) {
     queryKey: ["enrollments", studentId],
     queryFn: ({ signal }) => getJson<EnrollmentRow[]>(`/api/enrollments?studentId=${studentId}`, signal),
     enabled: !!studentId,
+    staleTime: 30 * 60_000,
   });
 }

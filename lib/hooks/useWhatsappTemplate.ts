@@ -8,6 +8,7 @@ export function useWhatsappTemplate() {
   const data = useQuery<{ template: string }>({
     queryKey: KEY,
     queryFn: ({ signal }) => getJson<{ template: string }>("/api/settings/whatsapp", signal),
+    staleTime: 30 * 60_000,
   });
   const save = useMutation({
     mutationFn: (template: string) => http.put("/api/settings/whatsapp", { template }).then((r) => r.data),

@@ -7,5 +7,6 @@ export function useStudent(id?: string) {
     queryKey: ["student", id],
     queryFn: ({ signal }) => getJson<Student>(`/api/students/${id}`, signal),
     enabled: !!id,
+    staleTime: 30 * 60_000,
   });
 }

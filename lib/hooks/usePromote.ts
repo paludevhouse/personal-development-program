@@ -29,6 +29,8 @@ export function usePromote() {
       qc.invalidateQueries({ queryKey: ["student-list"] });
       qc.invalidateQueries({ queryKey: ["classes"] });
       qc.invalidateQueries({ queryKey: ["academic-years"] });
+      qc.invalidateQueries({ queryKey: ["enrollments"] });
+      qc.invalidateQueries({ queryKey: ["enrollments-year"] });
     },
   });
 }

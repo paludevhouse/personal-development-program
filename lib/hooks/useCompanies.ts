@@ -6,7 +6,7 @@ const KEY = ["companies"];
 
 export function useCompanies() {
   const qc = useQueryClient();
-  const data = useQuery<Company[]>({ queryKey: KEY, queryFn: ({ signal }) => getJson<Company[]>("/api/companies", signal) });
+  const data = useQuery<Company[]>({ queryKey: KEY, queryFn: ({ signal }) => getJson<Company[]>("/api/companies", signal), staleTime: 30 * 60_000 });
   const invalidate = () => qc.invalidateQueries({ queryKey: KEY });
   const create = useMutation({ mutationFn: (b: Partial<Company>) => http.post("/api/companies", b).then((r) => r.data), onSuccess: invalidate });
   const update = useMutation({ mutationFn: (b: Company) => http.put(`/api/companies/${b.id}`, b).then((r) => r.data), onSuccess: invalidate });
