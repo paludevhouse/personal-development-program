@@ -80,8 +80,8 @@ export default function ClassesPage() {
       ) : ((data.data ?? []).length === 0 && !data.isLoading) ? (
         <StateView icon={<Chalkboard size={44} weight="duotone" />} title="Belum ada data" description="Tambah kelas untuk tahun ajaran terpilih." />
       ) : (
-        <Table.ScrollContainer minWidth={500}>
-          <Table>
+        <Table.ScrollContainer minWidth={500} maxHeight="calc(100vh - 260px)">
+          <Table stickyHeader>
             <Table.Thead><Table.Tr><Table.Th>Kelas</Table.Th><Table.Th>Wali Kelas</Table.Th><Table.Th /></Table.Tr></Table.Thead>
             <Table.Tbody>
               {(data.data ?? []).map((c) => (

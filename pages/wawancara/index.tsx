@@ -225,8 +225,8 @@ export default function WawancaraPage() {
       ) : rows.length === 0 ? (
         <StateView icon={<Notebook size={44} weight="duotone" />} title="Belum ada wawancara" description="Tambah catatan wawancara penjurusan untuk memulai riwayat pemilihan jurusan siswa." />
       ) : (
-        <Table.ScrollContainer minWidth={950}>
-          <Table>
+        <Table.ScrollContainer minWidth={950} maxHeight="calc(100vh - 260px)">
+          <Table stickyHeader>
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Tanggal</Table.Th>

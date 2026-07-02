@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Avatar, Button, Card, Group, PasswordInput, Stack, Text, Title, Badge } from "@mantine/core";
 import { notifications } from "@mantine/notifications";
+import { onAuthStateChanged } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
 import { useChangePassword } from "@/lib/hooks/useChangePassword";
 import { EnvelopeSimple, UserCircle } from "@phosphor-icons/react";
@@ -15,12 +16,14 @@ export default function AccountPage() {
   const [confirm, setConfirm] = useState("");
 
   useEffect(() => {
-    const user = getClientAuth().currentUser;
-    if (user) {
-      setEmail(user.email ?? "");
-      setDisplayName(user.displayName ?? "");
-      setUid(user.uid ?? "");
-    }
+    // Firebase restores the auth session asynchronously, so `currentUser` is
+    // often still null on mount — subscribe so email/name/uid populate once ready.
+    const unsub = onAuthStateChanged(getClientAuth(), (user) => {
+      setEmail(user?.email ?? "");
+      setDisplayName(user?.displayName ?? "");
+      setUid(user?.uid ?? "");
+    });
+    return unsub;
   }, []);
 
   function submit() {
@@ -45,7 +48,7 @@ export default function AccountPage() {
             <Text fw={600} size="lg">{displayName || "Admin"}</Text>
             <Group gap="xs">
               <EnvelopeSimple size={14} weight="bold" />
-              <Text size="sm" c="dimmed">{email}</Text>
+              <Text size="sm" c="dimmed">{email || "—"}</Text>
             </Group>
             <Group gap="xs">
               <Badge variant="light" size="sm">Admin</Badge>
