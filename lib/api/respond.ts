@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse, NextApiHandler } from "next";
 import { getVersions } from "../db/versions";
+import { hasValidSession } from "../auth/verify";
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -18,6 +19,13 @@ export function methods(map: Partial<Record<Method, Handler>>, options?: Methods
     const etagCols = method === "GET" ? options?.etag?.GET : undefined;
 
     if (etagCols) {
+      // Gate the freshness probe: without a valid session, no ETag/304 —
+      // otherwise unauthenticated clients could watch collection versions.
+      // (Cheap local verify; the handler still runs full requireAdmin on miss.)
+      if (!(await hasValidSession(req))) {
+        res.status(401).json({ error: "Unauthorized" });
+        return;
+      }
       const tag = 'W/"' + (await getVersions(etagCols)) + '"';
       res.setHeader("Cache-Control", "private, no-cache");
       res.setHeader("ETag", tag);

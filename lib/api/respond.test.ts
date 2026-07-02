@@ -4,9 +4,13 @@ import type { NextApiRequest, NextApiResponse } from "next";
 vi.mock("../db/versions", () => ({
   getVersions: vi.fn(async (cols: string[]) => cols.map((c) => `${c}:1`).join(",")),
 }));
+vi.mock("../auth/verify", () => ({
+  hasValidSession: vi.fn(async () => true),
+}));
 
 import { methods, ApiError } from "./respond";
 import { getVersions } from "../db/versions";
+import { hasValidSession } from "../auth/verify";
 
 function mockRes() {
   const headers: Record<string, string> = {};
@@ -77,6 +81,19 @@ describe("methods", () => {
       expect(res.status).toHaveBeenCalledWith(304);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((res.end as any)).toHaveBeenCalled();
+    });
+
+    it("returns 401 (no ETag, no 304) when the session is invalid", async () => {
+      vi.mocked(hasValidSession).mockResolvedValueOnce(false);
+      const res = mockRes();
+      const handler = vi.fn(async () => [1, 2, 3]);
+      await methods(
+        { GET: handler },
+        { etag: { GET: ["students"] } }
+      )(req("GET", { "if-none-match": 'W/"students:1"' }), res);
+      expect(handler).not.toHaveBeenCalled();
+      expect(res.status).toHaveBeenCalledWith(401);
+      expect(res._headers["ETag"]).toBeUndefined();
     });
 
     it("uses no-store (not ETag) for routes without the etag option", async () => {
